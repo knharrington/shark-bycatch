@@ -2,21 +2,12 @@
 # This script is the server for the CFEMM app
 # capabilities include: viewing tables, maps, and figures
 
-# TO DO
-# custom css
-# add general stats to the about page
 ################################################################################
 #remove(list = ls())
 
 function(input, output, session) {
   
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-  
-  # observe({
-  #   # periodically collect
-  #   invalidateLater(1000,session)
-  #   cleanMem()
-  # }) 
   
   # Tables
   
