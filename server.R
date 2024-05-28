@@ -63,11 +63,10 @@ function(input, output, session) {
   species.sub.SHEs_sf <- st_as_sf(species.sub.SHEs, coords = c("Catch_Longitude", "Catch_Latitude"), crs = st_crs(gridshp))
   
   # Perform spatial join and filtering
-  pro_grid <- as.data.frame(st_join(species.sub.SHEs_sf, gridshp, join = st_intersects))
+  pro_grid <- setDT(st_join(species.sub.SHEs_sf, gridshp, join = st_intersects))
   
   filtered_data_cpue <- reactive({
-    setDT(pro_grid)  # Convert to data.table
-    
+
     pro_grid[!is.na(Species_CPU_Hook_Hours_BLL1000) &
                #!is.na(Proportion_Retained),
                !is.na(Depth) &
