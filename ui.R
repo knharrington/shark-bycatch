@@ -6,6 +6,15 @@
 # page appearance
 
 navbarPage(title=div(img(src="mote-logo.png", style = "width:30px;height:27px")," Bycatch Data Summary", style = "text-align: center"), theme = shinytheme("flatly"), 
+           
+           tags$head(tags$style(HTML(
+             '.navbar-static-top {background-color: #023f88;}',
+             '.navbar-default .navbar-nav>.active>a {background-color: #023f88;}',
+             '.nav-tabs > li > a {color: #00aae7;}',
+             'a {color: #00aae7;}',
+             'a:hover {color: #00aae7;}'
+           ))),
+           
            tabPanel(title=div("Sharks"),
                   fluidPage(
                     sidebarLayout(
@@ -25,12 +34,12 @@ navbarPage(title=div(img(src="mote-logo.png", style = "width:30px;height:27px"),
                                    sliderInput("years", "Time Range", min(top.sub$Retrieval_Year), max(top.sub$Retrieval_Year),
                                                   value = c(min(top.sub$Retrieval_Year), max(top.sub$Retrieval_Year)), sep = "", round = TRUE, step = 1),
                                    checkboxGroupInput("seasons", "Season", 
-                                                      choiceNames = list(HTML("<b>Spring</b> (Mar, Apr, May)"), 
-                                                                         HTML("<b>Summer</b> (Jun, Jul, Aug)"), 
-                                                                         HTML("<b>Fall</b> (Sep, Oct, Nov)"), 
-                                                                         HTML("<b>Winter</b> (Dec, Jan, Feb)")), 
-                                                      selected = list("Spring", "Summer", "Fall", "Winter"),
-                                                      choiceValues = list("Spring", "Summer", "Fall", "Winter")),
+                                                      choiceNames = list(HTML("<b>Winter</b> (Jan, Feb, Mar)"),
+                                                                         HTML("<b>Spring</b> (Apr, May, Jun)"), 
+                                                                         HTML("<b>Summer</b> (Jul, Aug, Sep)"), 
+                                                                         HTML("<b>Fall</b> (Oct, Nov, Dec)")), 
+                                                      selected = list("Winter","Spring", "Summer", "Fall"),
+                                                      choiceValues = list("Winter","Spring", "Summer", "Fall")),
                                    #radioButtons("show_maps", "Display Data", c("Catch Events", "Catch Per Unit Effort*"), selected = "Catch Events"),
                                    #checkboxGroupInput("rasters", "Bottom Temperature**", choices = c("Spring", "Summer", "Fall", "Winter"), selected = NULL),
                                    submitButton("Update")#,
