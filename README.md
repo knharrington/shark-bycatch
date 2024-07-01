@@ -10,7 +10,9 @@ This repository hosts the public-facing Shark Bycatch Shiny app developed by the
 
 ## Features
 **Gridded Catch Per Unit Effort Map:** Visualize catch per unit effort (CPUE) values on an interactive map. Darker colors of grid cells denote higher CPUEs. Click on grid cells for more information.
+
 **Effort Figures:** View graphical representations of fishing effort over time as well as temporal trends in CPUE.
+
 **Catch Composition Tables:** Examine detailed tables showing the composition of the shark species caught.
 
 ## Contributing
