@@ -3,7 +3,6 @@
 # capabilities include: viewing tables, maps, and figures
 
 ################################################################################
-#remove(list = ls())
 
 function(input, output, session) {
   
@@ -68,7 +67,6 @@ function(input, output, session) {
   filtered_data_cpue <- reactive({
 
     pro_grid[!is.na(Species_CPU_Hook_Hours_BLL1000) &
-               #!is.na(Proportion_Retained),
                !is.na(Depth) &
                Trip_Type == "Longline" &
                Retrieval_Year >= input$years[1] &
@@ -76,7 +74,6 @@ function(input, output, session) {
                Common_Name == input$select_species &
                Retrieval_Season %in% input$seasons,
              .(Species_CPU_Hook_Hours_BLL1000.mean = mean(Species_CPU_Hook_Hours_BLL1000),
-               #Proportion_Retained.mean = mean(Proportion_Retained),
                Depth.mean = mean(Depth)),
              by = GRID_ID][, .(GRID_ID, Species_CPU_Hook_Hours_BLL1000.mean, Depth.mean)] %>%
       unique() %>%
@@ -106,10 +103,7 @@ function(input, output, session) {
       addProviderTiles("Esri.OceanBasemap", options = providerTileOptions(variant = "Ocean/World_Ocean_Reference"), group = "Basemap") %>%
       setView(lng=-88.5, lat=27, zoom=6)  %>%
       addScaleBar(position = 'topleft',
-                  options = scaleBarOptions(maxWidth = 100, metric = TRUE, imperial = TRUE, updateWhenIdle = FALSE)) #%>%
-      #addMiniMap(position = 'bottomleft') %>%
-      #hideGroup(c("Catch Events", "Seasonal Closure")) %>%
-      #leafem::addMouseCoordinates()
+                  options = scaleBarOptions(maxWidth = 100, metric = TRUE, imperial = TRUE, updateWhenIdle = FALSE)) 
   })
 
   # reactive catch events
@@ -118,7 +112,6 @@ function(input, output, session) {
     if (length(filtered_data_cpue()$Species_CPU_Hook_Hours_BLL1000) >= 1 & length(input$seasons) >=1) {
 
       cpue_popup <- paste0("<strong>CPUE: </strong>", round(gridvalues()$CPUE, digits = 2),
-                           #"<br><strong>Proportion Retained: </strong>", round(gridvalues()$Proportion_Retained.mean, digits = 2),
                            "<br><strong>Depth (m): </strong>", round(gridvalues()$Depth.mean, digits = 2))
       # # cpue color palette
       qpal <- colorNumeric(palette = "Reds", domain = gridvalues()$CPUE, reverse = FALSE)
@@ -134,18 +127,6 @@ function(input, output, session) {
                  icon=port_icon,
                  lng= ~Longitude,
                  lat= ~Latitude) %>%
-      # addPolygons(data=st_zm(gearrest),
-      #             color="black",
-      #             fillOpacity=0.25,
-      #             group="Gear Restrictions") %>%
-      # addPolygons(data=st_zm(seasonalclose),
-      #             color="blue",
-      #             fillOpacity=0.25,
-      #             group="Seasonal Closure") %>%
-    # addRasterImage(kdraster(),
-    #                colors = pal_heat(),
-    #                opacity = .75,
-    #                group = "Catch Density") %>%
       addPolygons(data=st_zm(gridvalues()),
                   fillColor = ~qpal(CPUE),
                   weight = 0.5,
@@ -153,30 +134,15 @@ function(input, output, session) {
                   fillOpacity = 1,
                   highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = FALSE),
                   popup = cpue_popup) %>%
-                  #group="CPUE Grid") %>%
-      # addCircles(data=filtered_data(),
-      #            lng = ~Catch_Longitude,
-      #            lat = ~Catch_Latitude,
-      #            radius = 6,
-      #            color = "black",
-      #            group="Catch Events") %>%
       addLegend(position = 'topright',
                 pal = qpal,
                 values = gridvalues()$CPUE,
                 opacity = 1,
                 title = HTML('Catch per 1000<br>Hook Hours')) %>%
-                #group="CPUE Grid") %>%
-      # addLegend(pal = pal_heat(),
-      #           values = heat_values(),
-      #           opacity = 1,
-      #           title = "Density of<br>Catch Events",
-      #           group = "Catch Density") %>%
       addLayersControl(
         overlayGroups = c("Graticule"),
         position ="topright",
-        options = layersControlOptions(collapsed = FALSE)) #%>%
-      #addControl(html = '<div id="combined-legend"></div>', position = "topright")
-      #hideGroup(c("Catch Events", "Seasonal Closure"))
+        options = layersControlOptions(collapsed = FALSE)) 
     
     } else {
       leafletProxy("mainmap") %>%
@@ -199,7 +165,7 @@ function(input, output, session) {
   })
   
   output$cpueplot <- renderPlot({
-    # Filter the data directly in data.table
+
     filtered_data <- top.sub[Common_Name == input$select_species]
     
     ggplot(filtered_data, aes(x = Retrieval_Begin_Date_Time, y = Species_CPU_Hook_Hours_BLL1000)) +
