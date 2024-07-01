@@ -29,8 +29,6 @@ navbarPage(title=div(img(src="mote-logo.png", style = "width:30px;height:27px"),
                                    strong("Total Observations:"),
                                    verbatimTextOutput("text_obs", placeholder=FALSE),
                                    p(" "),
-                                   #selectizeInput("select_species", label = "Select Species", choices = sort(unique(top.sub$Common_Name)), 
-                                                  #options = list(placeholder = 'Please select a species', onInitialize = I('function() { this.setValue(""); }') ) ), #placeholder = 'Please select a species', 
                                    selectInput("select_species", label = "Select Species", choices = sort(unique(top.sub$Common_Name)), selected = sort(unique(top.sub$Common_Name))[1]),
                                    sliderInput("years", "Time Range", min(top.sub$Retrieval_Year), max(top.sub$Retrieval_Year),
                                                   value = c(min(top.sub$Retrieval_Year), max(top.sub$Retrieval_Year)), sep = "", round = TRUE, step = 1),
@@ -41,24 +39,13 @@ navbarPage(title=div(img(src="mote-logo.png", style = "width:30px;height:27px"),
                                                                          HTML("<b>Fall</b> (Oct, Nov, Dec)")), 
                                                       selected = list("Winter","Spring", "Summer", "Fall"),
                                                       choiceValues = list("Winter","Spring", "Summer", "Fall")),
-                                   #radioButtons("show_maps", "Display Data", c("Catch Events", "Catch Per Unit Effort*"), selected = "Catch Events"),
-                                   #checkboxGroupInput("rasters", "Bottom Temperature**", choices = c("Spring", "Summer", "Fall", "Winter"), selected = NULL),
-                                   submitButton("Update")#,
-                                   #p(""),
-                                   #helpText("*Averages recorded from 2000-2017.")
+                                   submitButton("Update")
                       ), #sidebarPanel
                       mainPanel(
                         tabsetPanel(
                           tabPanel("Maps",
                                    withLoader(leafletOutput("mainmap", height = "85vh"), type="html", loader="loader4")
-                                   # wellPanel(
-                                   #   h4("Closures and Restrictions"),
-                                   #   p("The shapefiles for closures and restrictions can be found on NOAA Fisheries's website at noaa.gov")
-                                   # )
-                          ), #tabPanel 1
-                          # h6("This map displays data entered from the input box in a grided format. 
-                          #    The 'stoplight' colors indicate the average amount of damaged fish being caught in an area.
-                          #    Each grid cell is 1 mile long by 1 mile wide."),
+                                   ),
                           tabPanel("Figures",
                                    fluidRow(
                                      column(withLoader(plotOutput("activityplot"), type="html", loader="loader4"), width=6),
@@ -69,7 +56,6 @@ navbarPage(title=div(img(src="mote-logo.png", style = "width:30px;height:27px"),
                                    withLoader(plotOutput("cpueplot"), type="html", loader="loader4"),
                                    p(" ")
                           ), #tabPanel 2
-                          #h6()
                           #textOutput("radio.txt"),
                           #tableOutput("trouble"),
                           #tableOutput("trouble2")
