@@ -9,17 +9,8 @@
   library(tidyverse)
   library(data.table)
   library(janitor)
-  
-  library(spatial)
   library(sf)
-  library(spdep)
-  library(sfdep)
-  library(fields)
-  library(terra)
-  
   library(RColorBrewer)
-  library(viridis)
-  
   library(leaflet)
   library(shiny)
   library(htmlwidgets)
