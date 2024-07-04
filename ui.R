@@ -10,10 +10,11 @@ navbarPage(title=div(img(src="mote-logo.png", style = "width:30px;height:27px"),
            tags$head(tags$style(HTML(
              '.navbar-static-top {background-color: #023f88;}',
              '.navbar-default .navbar-nav>.active>a {background-color: #023f88;}',
-             '.btn {background-color: #023f88}',
+             '.btn {background-color: #023f88; border-color: #023f88;}',
              '.nav-tabs > li > a {color: #00aae7;}',
              'a {color: #00aae7;}',
-             'a:hover {color: #00aae7;}'
+             'a:hover {color: #00aae7;}',
+             '.help-block {color: #63666a;}'
            ))),
            
            tabPanel(title=div("Sharks"),
