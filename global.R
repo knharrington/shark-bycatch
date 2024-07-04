@@ -126,9 +126,9 @@ summarylinechart <- ggplot(summary_data) +
   theme_minimal() +
   scale_x_continuous(n.breaks = 8) +
   scale_color_manual(name = "Legend", 
-                     values = c("Sea Days" = "#0d1687", 
-                                "Trips" = "#c5407e", 
-                                "Hauls" = "#f0f920")) +
+                     values = c("Sea Days" = "#0054a6", 
+                                "Trips" = "#f37163", 
+                                "Hauls" = "#00aae7")) +
   labs(title = "Trips, Hauls, and Sea Days",
        x = " ",
        y = "Total") +
@@ -156,13 +156,17 @@ bar_modified <- bar %>%
   mutate(Common_Name = if_else(Common_Name %in% top_species_all_years, as.character(Common_Name), "Other")) %>%
   mutate(Common_Name = factor(Common_Name, levels = c("Other", top_species_all_years)))
 
+mote_pal <- colorRampPalette(c("#f37163", "#0054a6", "#00aae7"))
+num_colors <- length(c(top_species_all_years, "Other"))
+custom_colors <- mote_pal(num_colors)
+color_mapping <- setNames(custom_colors, levels(bar_modified$Common_Name))
+
 topspeciesbar <- ggplot(bar_modified, aes(fill = Common_Name, y = Total_Sp_Yr, x = as.character(Retrieval_Year))) +
   geom_bar(position = "stack", stat = "identity") +
-  scale_fill_viridis(name = "Common Name", 
-                     breaks = c(top_species_all_years, "Other"), 
-                     direction = -1, 
-                     discrete = TRUE, 
-                     option = "C") +
+  scale_fill_manual(name = "Common Name", 
+                    values= color_mapping,
+                     breaks = c(top_species_all_years, "Other")
+                    )+
   labs(title = "Top Species Catch Events",
        x = " ",
        y = "Catch Events") +
