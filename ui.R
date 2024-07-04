@@ -44,7 +44,7 @@ navbarPage(title=div(img(src="mote-logo.png", style = "width:30px;height:27px"),
                       ), #sidebarPanel
                       mainPanel(
                         tabsetPanel(
-                          tabPanel("Maps",
+                          tabPanel("Map",
                                    withLoader(leafletOutput("mainmap", height = "85vh"), type="html", loader="loader4")
                                    ),
                           tabPanel("Figures",
@@ -74,20 +74,35 @@ navbarPage(title=div(img(src="mote-logo.png", style = "width:30px;height:27px"),
                                    ) #fluidRow
                                    ), # tabPanel
                           tabPanel("User Guide",
-                                   h3("How to Use this App"),
+                                   #h3("How to Use this App"),
                                    #p(""),
-                                   h4("General Use"),
-                                   p('This app displays shark bycatch data collected via video review from electronic monitoring systems
+                                   h3("General Use"),
+                                   p("This app displays shark bycatch data collected via video review from electronic monitoring systems
                                      onboard commercial fishing vessels in the Gulf of Mexico. Data is displayed in three formats located
                                      on three tabs: an interactive map, figures depicting effort, and tables describing catch disposition.
                                      In the panel on the left (if viewing on a desktop) there are inputs that can be used to filter the
                                      data presented in the three tabs. You can filter the data based on species (top 10 caught available),
                                      range in years the catch occurred, and season the catch occurred. Once your input selections have been
-                                     made, click the "Update" button to see the data change. The "Total Observations" counter will also update
+                                     made, click the 'Update' button to see the data change. The 'Total Observations' counter will also update
                                      to display how many records are associated with the input filters. Please note that all data reflects
-                                     approximately 25% of fishing activities.'),
+                                     approximately 25% of fishing activities."),
                                    p(" "),
-                                   
+                                   h4("Map"),
+                                   p("The interactive map displays the data filtered by the inputs in a gridded format (10 min by 10 min) depicting
+                                     catch per 1000 hook hours. In longline fisheries, effort is usually determined in 'hook-hours' where the number of
+                                     hooks multiplied by the amount of time the hooks were in the water can be used to estimate effort. This metric
+                                     is also called catch-per-unit-effort (CPUE). In general, the darker the grid cell on the map, the more catch has 
+                                     been recorded there."),
+                                   h4("Figures"),
+                                   p("Three figures depict effort. The first two figures depicting trip information and top catch events do not change 
+                                     when the filters are updated. The bottom figure depicting catch per unit effort over time changes based on the 
+                                     species selected. To update the figure, select a new species from the dropdown menu and press the 'Update' button. 
+                                     The lines are color-coded to denote whether the catch was discarded or retained, and the gray halo surrounding the 
+                                     line represents the confidence interval."),
+                                   h4("Tables"),
+                                   p("The tables depict catch disposition. The first table does not change when the filters are updated and shows 
+                                     the proportion of species caught to the total catch. The bottom tables change when new species are selected 
+                                     and the 'Update' button is pressed."),
                                    h4("Feedback"),
                                    HTML("<p>Please report any issues, feedback, or requests by submitting a 
                                         <a href='https://github.com/knharrington/shark-bycatch'>GitHub issue</a> 
