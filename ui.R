@@ -95,14 +95,14 @@ navbarPage(title=div(img(src="mote-logo.png", style = "width:30px;height:27px"),
                                      been recorded there."),
                                    h4("Figures"),
                                    p("Three figures depict effort. The first two figures depicting trip information and top catch events do not change 
-                                     when the filters are updated. The bottom figure depicting catch per unit effort over time changes based on the 
-                                     species selected. To update the figure, select a new species from the dropdown menu and press the 'Update' button. 
+                                     when the filters are updated. The bottom figure depicting catch-per-unit-effort over time changes based on the 
+                                     species selected. To update the figure, select a new species from the dropdown menu and click the 'Update' button. 
                                      The lines are color-coded to denote whether the catch was discarded or retained, and the gray halo surrounding the 
                                      line represents the confidence interval."),
                                    h4("Tables"),
                                    p("The tables depict catch disposition. The first table does not change when the filters are updated and shows 
                                      the proportion of species caught to the total catch. The bottom tables change when new species are selected 
-                                     and the 'Update' button is pressed."),
+                                     and the 'Update' button is clicked."),
                                    h4("Feedback"),
                                    HTML("<p>Please report any issues, feedback, or requests by submitting a 
                                         <a href='https://github.com/knharrington/shark-bycatch'>GitHub issue</a> 
