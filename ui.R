@@ -81,15 +81,16 @@ navbarPage(title=div(img(src="mote-logo.png", style = "width:30px;height:27px"),
                                      on three tabs: an interactive map, figures depicting effort, and tables describing catch disposition.
                                      In the panel on the left (if viewing on a desktop) there are inputs that can be used to filter the
                                      data presented in the three tabs. You can filter the data based on species (top 10 caught available),
-                                     range in years the catch occurred, and season the catch occurred. Once you rinput selections have been
+                                     range in years the catch occurred, and season the catch occurred. Once your input selections have been
                                      made, click the "Update" button to see the data change. The "Total Observations" counter will also update
                                      to display how many records are associated with the input filters. Please note that all data reflects
                                      approximately 25% of fishing activities.'),
                                    p(" "),
+                                   
                                    h4("Feedback"),
                                    HTML("<p>Please report any issues, feedback, or requests by submitting a 
                                         <a href='https://github.com/knharrington/shark-bycatch'>GitHub issue</a> 
-                                        or emailing knharrington@mote.org.</p>")
+                                        or emailing <a href='mailto:knharrington@mote.org'>knharrington@mote.org</a>.</p>")
                                    ) #tabPanel 3
                         ) #tabsetPanel
                       ) #mainPanel
