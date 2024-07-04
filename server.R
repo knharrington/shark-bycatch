@@ -170,7 +170,7 @@ function(input, output, session) {
     
     ggplot(filtered_data, aes(x = Retrieval_Begin_Date_Time, y = Species_CPU_Hook_Hours_BLL1000)) +
       geom_point() +
-      geom_smooth(method = "gam", formula = y ~ s(x), linewidth = 1.25, colour = "#0d1687") + 
+      geom_smooth(method = "gam", formula = y ~ s(x), linewidth = 1.25, colour = "#0054a6") + 
       labs(title = paste0(input$select_species, " CPUE"),
            x = " ",
            y = "Catch per 1000 Hook Hours") +
