@@ -122,11 +122,16 @@ function(input, output, session) {
       #clearImages() %>%
       clearControls() %>%
       addSimpleGraticule(interval = 1, group = "Graticule") %>%
-      addMarkers(data=homeport,
-                 popup=paste0("<strong>", homeport$Home_Port, "</strong><br>", homeport$City_State),
-                 icon=port_icon,
+      addMarkers(data=moteport,
+                 popup=paste0("<strong>", moteport$Home_Port, "</strong><br>", moteport$City_State),
+                 icon=mote_icon,
                  lng= ~Longitude,
                  lat= ~Latitude) %>%
+      addMarkers(data=homeport,
+                 popup=paste0(homeport$CITY, ", ", homeport$STATE),
+                 icon=port_icon,
+                 lng= ~LON,
+                 lat= ~LAT) %>%
       addPolygons(data=st_zm(gridvalues()),
                   fillColor = ~qpal(CPUE),
                   weight = 0.5,

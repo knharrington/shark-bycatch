@@ -85,10 +85,15 @@ lats <- c(27.332160)
 lons <- c(-82.577740)
 port <- c("Mote Marine Laboratory")
 city <- c("Sarasota, FL")
-homeport <- as.data.frame(list(Latitude=lats, Longitude=lons, Home_Port=port, City_State=city))
-port_icon <- makeIcon("www/MoteLogomark.svg",
+moteport <- as.data.frame(list(Latitude=lats, Longitude=lons, Home_Port=port, City_State=city))
+mote_icon <- makeIcon("www/MoteLogomark.svg",
                       iconWidth=30, iconHeight=30,
                       iconAnchorX=15, iconAnchorY=15)
+
+homeport <- fread("data/cities.csv")
+port_icon <- makeIcon("www/port-loc.svg",
+                      iconWidth=30, iconHeight=30,
+                      iconAnchorX=15, iconAnchorY=30)
 
 # Calculate the number of unique retrievals per unique trip
 unique_retrievals <- All.Data.Final %>%
