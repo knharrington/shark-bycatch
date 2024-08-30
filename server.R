@@ -11,7 +11,7 @@ function(input, output, session) {
   # Tables
   
   Condition.Table <- reactive({
-    top_sub_filtered <- top.sub[top.sub$Common_Name == input$select_species,]
+    top_sub_filtered <- top.sub[top.sub$Common_Name %in% input$select_species,]
     summary_data <- top_sub_filtered %>%
       dplyr::group_by(Condition_On_Arrival) %>%
       dplyr::rename(`Condition On Arrival` = Condition_On_Arrival) %>%
@@ -24,7 +24,7 @@ function(input, output, session) {
   }) %>% bindCache(input$select_species)
 
   Fate.Table <- reactive({
-    top_sub_filtered <- top.sub[top.sub$Common_Name == input$select_species,]
+    top_sub_filtered <- top.sub[top.sub$Common_Name %in% input$select_species,]
     summary_data <- top_sub_filtered %>%
       dplyr::group_by(Catch_Fate) %>%
       dplyr::rename(`Catch Fate` = Catch_Fate) %>%
@@ -49,18 +49,12 @@ function(input, output, session) {
   # Map point data
   filtered_data <- reactive({
     setDT(top.sub)
-    filtered <- top.sub[Common_Name == input$select_species &
+    filtered <- top.sub[Common_Name %in% input$select_species &
              Retrieval_Year >= input$years[1] &
              Retrieval_Year <= input$years[2] &
              Retrieval_Season %in% input$seasons, ]
     as_tibble(filtered)
   })
-  
-  # Convert Data.In to an sf object
-  species.sub.SHEs_sf <- st_as_sf(species.sub.SHEs, coords = c("Catch_Longitude", "Catch_Latitude"), crs = st_crs(gridshp))
-  
-  # Perform spatial join and filtering
-  pro_grid <- setDT(st_join(species.sub.SHEs_sf, gridshp, join = st_intersects))
   
   filtered_data_cpue <- reactive({
 
@@ -69,7 +63,7 @@ function(input, output, session) {
                Trip_Type == "Longline" &
                Retrieval_Year >= input$years[1] &
                Retrieval_Year <= input$years[2] &
-               Common_Name == input$select_species &
+               Common_Name %in% input$select_species &
                Retrieval_Season %in% input$seasons,
              .(Species_CPU_Hook_Hours_BLL1000.mean = mean(Species_CPU_Hook_Hours_BLL1000),
                Depth.mean = mean(Depth)),
@@ -108,7 +102,7 @@ function(input, output, session) {
   # reactive catch events
   observe({
     
-    if (length(filtered_data_cpue()$Species_CPU_Hook_Hours_BLL1000) >= 1 & length(input$seasons) >=1) {
+    if (length(filtered_data_cpue()$Species_CPU_Hook_Hours_BLL1000) >= 1 & length(input$seasons) >=1 & length(input$select_species) >=1 ) {
 
       cpue_popup <- paste0("<strong>CPUE: </strong>", round(gridvalues()$CPUE, digits = 2),
                            "<br><strong>Depth (m): </strong>", round(gridvalues()$Depth.mean, digits = 2))
@@ -151,7 +145,8 @@ function(input, output, session) {
     } else {
       leafletProxy("mainmap") %>%
         clearShapes() %>%
-        clearControls()
+        clearControls() %>%
+        addSimpleGraticule(interval = 1, group = "Graticule")
     }
 
     })
@@ -170,12 +165,12 @@ function(input, output, session) {
 # create reactive gam for cpue over time
   output$cpueplot <- renderPlot({
 
-    filtered_data <- top.sub[Common_Name == input$select_species]
+    filtered_data <- top.sub[Common_Name %in% input$select_species]
     
     ggplot(filtered_data, aes(x = Retrieval_Begin_Date_Time, y = Species_CPU_Hook_Hours_BLL1000)) +
       geom_point() +
       geom_smooth(method = "gam", formula = y ~ s(x), linewidth = 1.25, colour = "#0054a6") + 
-      labs(title = paste0(input$select_species, " CPUE"),
+      labs(#title = paste0(input$select_species, " CPUE"),
            x = " ",
            y = "Catch per 1000 Hook Hours") +
       scale_x_datetime(date_breaks = "3 months", date_labels = "%b %Y") +
@@ -199,9 +194,14 @@ function(input, output, session) {
   #   str2 <- paste0(input$select_species)
   #   HTML(paste(strong(str1), str2))
   # })
+
+
+  output$text_sp1 <- renderText({
+    paste0(input$select_species, collapse = "; ")
+  })
   
-  output$text_sp <- renderText({
-    paste0(input$select_species)
+  output$text_sp2 <- renderText({
+    paste0(input$select_species, collapse = "; ")
   })
   
 } #end server
