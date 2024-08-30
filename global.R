@@ -1,6 +1,6 @@
 ################################################################################
 # This script is the global environment for the CFEMM app
-# It stores objects needed in the sever and ui
+# It stores objects needed in the server and ui
 
 ################################################################################
 
@@ -20,7 +20,7 @@
 }
 
 # Most recent export
-Data.In <- fread("data/allsharks.csv")
+Data.In <- fread("data/allsharks-8-12-24.csv")
 
 #Subset for time
 My.Date.Start <- as.Date("2015-06-01", format = "%Y-%m-%d") 
@@ -72,7 +72,7 @@ if (!is.data.table(All.Species)) {
 # subset to the unique set-haul event level (for cpues and hotspots)
 species.sub.SHEs = unique(top.sub[,c("Unique_Retrieval","Species_CPU_Hook_Hours_BLL1000","Indiv_CPU_Hook_Hours_VL","Indiv_CPU_Hook_Hours_BLL1000","Shark",
                                      "Species_CPU_km","Proportion_Retained","Proportion_Discarded","Species_CPU_Hook_Hours_VL","Species_CPU_Fishing_Time",
-                                     "Species_Ret_CPU_Fishing_Time","Grid_Name","Trip_Type","Retrieval_Year","Common_Name", "Retrieval_Season", "Depth",
+                                     "Species_Ret_CPU_Fishing_Time","Catch_Grid_Name","Trip_Type","Retrieval_Year","Common_Name", "Retrieval_Season", "Depth",
                                      "Catch_Longitude", "Catch_Latitude")])
 
 # grid shape needed
@@ -175,3 +175,7 @@ topspeciesbar <- ggplot(bar_modified, aes(fill = Common_Name, y = Total_Sp_Yr, x
         legend.title = element_text(size = 18), 
         legend.text = element_text(size = 14))
 
+# text for ui time range
+mindate <- format(as.Date(min(All.Data.Final$Retrieval_Begin_Date)), format = "%m/%Y")
+maxdate <- format(as.Date(max(All.Data.Final$Retrieval_Begin_Date)), format = "%m/%Y")
+datetext <- paste0("Time Range (", mindate, " - ", maxdate, ")")
