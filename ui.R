@@ -30,7 +30,8 @@ navbarPage(title=div(img(src="mote-logo.png", style = "width:30px;height:27px"),
                                    strong("Total Observations"),
                                    verbatimTextOutput("text_obs", placeholder=FALSE),
                                    p(" "),
-                                   selectInput("select_species", label="Select Species (top 10 available)", choices = sort(unique(top.sub$Common_Name)), selected = "Sandbar Shark"),#sort(unique(top.sub$Common_Name))[1]),
+                                   selectInput("select_species", label="Select Species (top 10 available)", choices = sort(unique(top.sub$Common_Name)), selected = "Sandbar Shark",
+                                               selectize = TRUE, multiple=TRUE),#sort(unique(top.sub$Common_Name))[1]),
                                    #helpText("Top 10 species caught available."),
                                    sliderInput("years", datetext, min(top.sub$Retrieval_Year), max(top.sub$Retrieval_Year),
                                                   value = c(min(top.sub$Retrieval_Year), max(top.sub$Retrieval_Year)), sep = "", round = TRUE, step = 1),
@@ -54,7 +55,8 @@ navbarPage(title=div(img(src="mote-logo.png", style = "width:30px;height:27px"),
                                      column(withLoader(plotOutput("topspeciesplot"), type="html", loader="loader4"), width=6)
                                    ),
                                    p(" "),
-                                   wellPanel(helpText("Use the dropdown box on the left to change the species displayed in the following figure.")),
+                                   wellPanel(helpText("Use the dropdown box on the left to change the species displayed in the following figure."),
+                                             htmlOutput("text_sp1")),
                                    withLoader(plotOutput("cpueplot"), type="html", loader="loader4"),
                                    p(" ")
                           ), #tabPanel 2
@@ -66,7 +68,7 @@ navbarPage(title=div(img(src="mote-logo.png", style = "width:30px;height:27px"),
                                    withLoader(DT::dataTableOutput("topspeciestable"), type="html", loader="loader4"),
                                    p(" "),
                                    wellPanel(helpText("Use the dropdown box on the left to change the species displayed in the following tables."),
-                                             htmlOutput("text_sp")),
+                                             htmlOutput("text_sp2")),
                                    fluidRow(
                                      column(h4("Condition on Arrival"),
                                             withLoader(tableOutput("coatable"), type="html", loader="loader4"), width=6),
@@ -81,7 +83,9 @@ navbarPage(title=div(img(src="mote-logo.png", style = "width:30px;height:27px"),
                                      on three tabs: an interactive map, figures depicting effort, and tables describing catch disposition.
                                      In the panel on the left (if viewing on a desktop) there are inputs that can be used to filter the
                                      data presented in the three tabs. You can filter the data based on species (top 10 caught available),
-                                     range in years the catch occurred, and season the catch occurred. Once your input selections have been
+                                     range in years the catch occurred, and season the catch occurred. You can view multiple species and their 
+                                     combined data by selecting more than one from the dropdown menu. Remove species by clicking on them in the input bar 
+                                     and pressing your 'Delete' key or by pressing 'Backspace'. Once your input selections have been
                                      made, click the 'Update' button to see the data change. The 'Total Observations' counter will also update
                                      to display how many records are associated with the input filters. Please note that all data reflects
                                      approximately 25% of fishing activities."),
