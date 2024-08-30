@@ -16,13 +16,13 @@ This repository hosts the public-facing Shark Bycatch Shiny app developed by the
 **Catch Composition Tables:** Examine detailed tables showing the composition of the shark species caught.
 
 ## Contributing
-Contributions to improve the app are welcome. If you have any suggestions or find any issues, please open an issue or submit a pull request. Please note that access to the required data is not included in this repository but may be available upon request. 
+Contributions to improve the app are welcome. If you have any suggestions or find any issues, please open an issue or submit a pull request. Please note that access to the required data is confidential and not included in this repository. 
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgements
-This project is developed and maintained by the Center for Fisheries Electronic Monitoring at Mote Marine Laboratory. We thank all contributors and users for their support and feedback.
+This project is developed and maintained by the Center for Fisheries Electronic Monitoring at Mote Marine Laboratory. We thank all users and contributors for their support and feedback.
 
 ## Contact
 For any questions, feedback, or data requests, please contact knharrington@mote.org.
