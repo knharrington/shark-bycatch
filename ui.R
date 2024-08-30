@@ -22,7 +22,7 @@ navbarPage(title=div(img(src="mote-logo.png", style = "width:30px;height:27px"),
                     sidebarLayout(
                       sidebarPanel(h4("About This App"),
                                    HTML("<p>The data displayed in this app was collected via 25% review of electronic monitoring (EM) footage from bottom longline vessels
-                                      in the Gulf of Mexico reef fish fishery (2016-2023) as a part of the Center for Fisheries Electronic Monitoring at Mote Marine Laboratory's
+                                      in the Gulf of Mexico reef fish fishery (2016-2024) as a part of the Center for Fisheries Electronic Monitoring at Mote Marine Laboratory's
                                       voluntary EM program. For more information, please visit 
                                       <a href='https://www.mote.org/cfemm'>mote.org/cfemm</a>.</p>"),
                                    hr(style = "border-top: 1px solid #000000;"),
