@@ -47,8 +47,6 @@ function(input, output, session) {
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #   
   
   # Map point data
-
-  
   filtered_data <- reactive({
     setDT(top.sub)
     filtered <- top.sub[Common_Name == input$select_species &
@@ -80,6 +78,7 @@ function(input, output, session) {
       na.omit()
   })
   
+  # merge the dataset with the grid shape
   gridvalues <- reactive({
     if (nrow(filtered_data_cpue()) >= 1) {
       st_as_sf(sp::merge(x = gridshp, y = filtered_data_cpue(), by = "GRID_ID", all.x = FALSE)) %>%
@@ -113,10 +112,10 @@ function(input, output, session) {
 
       cpue_popup <- paste0("<strong>CPUE: </strong>", round(gridvalues()$CPUE, digits = 2),
                            "<br><strong>Depth (m): </strong>", round(gridvalues()$Depth.mean, digits = 2))
-      # # cpue color palette
+      # cpue color palette
       qpal <- colorNumeric(palette = "Reds", domain = gridvalues()$CPUE, reverse = FALSE)
 
-  # point shapes
+  # create gridded map
     leafletProxy("mainmap") %>%
       clearShapes() %>%
       #clearImages() %>%
@@ -157,10 +156,9 @@ function(input, output, session) {
 
     })
   
-  
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
-
+# render static plots
   output$activityplot <- renderPlot({
     summarylinechart
   })
@@ -169,6 +167,7 @@ function(input, output, session) {
     topspeciesbar
   })
   
+# create reactive gam for cpue over time
   output$cpueplot <- renderPlot({
 
     filtered_data <- top.sub[Common_Name == input$select_species]
@@ -190,7 +189,7 @@ function(input, output, session) {
   
 
  
-##### PRINT NUMBER OF OBSERVATIONS DISPLAYED #####
+# print total observations for filtered data in ui
  output$text_obs <- renderText({
  format(nrow(filtered_data()), big.mark=",")
  })
