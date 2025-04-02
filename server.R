@@ -8,14 +8,13 @@ function(input, output, session) {
   
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
   
-  # Tables
-  
+  # Condition table
   Condition.Table <- reactive({
     top_sub_filtered <- top.sub[top.sub$Common_Name %in% input$select_species,]
     summary_data <- top_sub_filtered %>%
-      dplyr::group_by(Condition_On_Arrival) %>%
-      dplyr::rename(`Condition On Arrival` = Condition_On_Arrival) %>%
-      dplyr::summarise(`Number Caught` = n()) %>%
+      group_by(Condition_On_Arrival) %>%
+      rename(`Condition On Arrival` = Condition_On_Arrival) %>%
+      summarise(`Number Caught` = n()) %>%
       mutate(`% of Catch` = round(`Number Caught` / sum(`Number Caught`) * 100, 2)) %>%
       adorn_totals("row") %>%
       mutate(`Number Caught` = format(`Number Caught`, big.mark = ","),
@@ -23,12 +22,13 @@ function(input, output, session) {
     as.data.frame(summary_data)
   }) %>% bindCache(input$select_species)
 
+  # Fate table
   Fate.Table <- reactive({
     top_sub_filtered <- top.sub[top.sub$Common_Name %in% input$select_species,]
     summary_data <- top_sub_filtered %>%
-      dplyr::group_by(Catch_Fate) %>%
-      dplyr::rename(`Catch Fate` = Catch_Fate) %>%
-      dplyr::summarise(`Number Caught` = n()) %>%
+      group_by(Catch_Fate) %>%
+      rename(`Catch Fate` = Catch_Fate) %>%
+      summarise(`Number Caught` = n()) %>%
       mutate(`% of Catch` = round(`Number Caught` / sum(`Number Caught`) * 100, 2)) %>%
       adorn_totals("row") %>%
       mutate(`Number Caught` = format(`Number Caught`, big.mark = ","),
@@ -43,54 +43,48 @@ function(input, output, session) {
   
   output$fatetable <- renderTable(Fate.Table(), rownames = FALSE, striped = TRUE)
   
-  
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #   
   
   # Map point data
   filtered_data <- reactive({
-    setDT(top.sub)
-    filtered <- top.sub[Common_Name %in% input$select_species &
-             Retrieval_Year >= input$years[1] &
-             Retrieval_Year <= input$years[2] &
-             Retrieval_Season %in% input$seasons, ]
-    as_tibble(filtered)
+      top_sharks %>% 
+        filter(
+          Retrieval_Year >= input$years[1] &
+          Retrieval_Year <= input$years[2] &
+          Common_Name %in% input$select_species &
+          Retrieval_Season %in% input$seasons
+        )
   })
   
-  filtered_data_cpue <- reactive({
-
-    pro_grid[!is.na(Species_CPU_Hook_Hours_BLL1000) &
-               !is.na(Depth) &
-               Trip_Type == "Longline" &
-               Retrieval_Year >= input$years[1] &
-               Retrieval_Year <= input$years[2] &
-               Common_Name %in% input$select_species &
-               Retrieval_Season %in% input$seasons,
-             .(Species_CPU_Hook_Hours_BLL1000.mean = mean(Species_CPU_Hook_Hours_BLL1000),
-               Depth.mean = mean(Depth)),
-             by = GRID_ID][, .(GRID_ID, Species_CPU_Hook_Hours_BLL1000.mean, Depth.mean)] %>%
-      unique() %>%
-      na.omit()
+  # Convert the data frame to a spatial object
+  filtered_data_sf <- reactive({
+      st_as_sf(filtered_data(), coords = c("Centroid_Longitude", "Centroid_Latitude"), crs = st_crs(gridshp))
+    })
+  
+  # Perform the spatial join
+  grid_join <- reactive({
+      setDT(st_join(filtered_data_sf(), gridshp, join = st_intersects))
+    })
+  
+  # Aggregate within grid cells
+  aggregated_data <- reactive({
+    grid_join() %>%
+      group_by(GRID_ID) %>%
+      reframe(
+        CPUE = mean(Species_CPU_Hook_Hours_BLL1000, na.rm = TRUE),
+        Depth.mean = mean(Depth, na.rm = TRUE)
+      ) 
   })
   
-  # merge the dataset with the grid shape
+  # Merge the dataset with the grid shape
   gridvalues <- reactive({
-    if (nrow(filtered_data_cpue()) >= 1) {
-      st_as_sf(sp::merge(x = gridshp, y = filtered_data_cpue(), by = "GRID_ID", all.x = FALSE)) %>%
-        dplyr::rename(c("CPUE" = "Species_CPU_Hook_Hours_BLL1000.mean"))
-    }
-  })   
+    st_as_sf(merge(x = gridshp, y = aggregated_data(), by = "GRID_ID", all.x = FALSE))
+  })  
   
-###############  
-    # # trouble-shooting data table
-    # troubledata <- reactive({
-    #     filtered_data_cpue()
-    # })
-    # 
-    # output$trouble <- renderTable({troubledata()})
-###############     
-
-  #base map: catch map
-  output$mainmap <- renderLeaflet({
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  
+  # base map
+  output$map <- renderLeaflet({
     leaflet() %>%
       addProviderTiles("Esri.OceanBasemap", options = providerTileOptions(variant = "Ocean/World_Ocean_Base"), group = "Basemap") %>%
       addProviderTiles("Esri.OceanBasemap", options = providerTileOptions(variant = "Ocean/World_Ocean_Reference"), group = "Basemap") %>%
@@ -100,78 +94,78 @@ function(input, output, session) {
   })
 
   # reactive catch events
-  observe({
+  observeEvent(input$update, {
     
-    if (length(filtered_data_cpue()$Species_CPU_Hook_Hours_BLL1000) >= 1 & length(input$seasons) >=1 & length(input$select_species) >=1 ) {
-
+    if (length(input$seasons) < 1 | length(input$select_species) < 1) {
+      
+      show_alert("Please ensure at least one species and season is selected.", type="error", showCloseButton=TRUE)
+    
+    } else {
+      
       cpue_popup <- paste0("<strong>CPUE: </strong>", round(gridvalues()$CPUE, digits = 2),
                            "<br><strong>Depth (m): </strong>", round(gridvalues()$Depth.mean, digits = 2))
-      # cpue color palette
-      qpal <- colorNumeric(palette = "Reds", domain = gridvalues()$CPUE, reverse = FALSE)
+      num_pal <- colorNumeric(palette = "Reds", domain = gridvalues()$CPUE, reverse = FALSE)
 
-  # create gridded map
-    leafletProxy("mainmap") %>%
-      clearShapes() %>%
-      #clearImages() %>%
-      clearControls() %>%
-      addSimpleGraticule(interval = 1, group = "Graticule") %>%
-      addMarkers(data=moteport,
-                 popup=paste0("<strong>", moteport$Home_Port, "</strong><br>", moteport$City_State),
-                 icon=mote_icon,
+      proxy <- leafletProxy("map") %>%
+        clearShapes() %>%
+        clearControls() %>%
+        addSimpleGraticule(interval = 1, group = "Graticule") %>%
+        addLayersControl(
+          overlayGroups = c("Graticule"),
+          position ="topright",
+          options = layersControlOptions(collapsed = FALSE)) %>%
+        
+        addMarkers(data = moteport,
+                 popup = paste0("<strong>", moteport$Home_Port, "</strong><br>", moteport$City_State),
+                 icon = mote_icon,
                  lng= ~Longitude,
                  lat= ~Latitude) %>%
-      addMarkers(data=homeport,
+        addMarkers(data=homeport,
                  popup=paste0(homeport$CITY, ", ", homeport$STATE),
                  icon=port_icon,
                  lng= ~LON,
                  lat= ~LAT) %>%
-      addPolygons(data=st_zm(gridvalues()),
-                  fillColor = ~qpal(CPUE),
+        
+        addPolygons(data = st_zm(gridvalues()),
+                  fillColor = ~num_pal(CPUE),
                   weight = 0.5,
                   color = "black",
                   fillOpacity = 1,
                   highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = FALSE),
                   popup = cpue_popup) %>%
-      addLegend(position = 'topright',
-                pal = qpal,
+        addLegend(position = 'topright',
+                pal = num_pal,
                 values = gridvalues()$CPUE,
                 opacity = 1,
-                title = HTML('Catch per 1000<br>Hook Hours')) %>%
-      addLayersControl(
-        overlayGroups = c("Graticule"),
-        position ="topright",
-        options = layersControlOptions(collapsed = FALSE)) 
-    
-    } else {
-      leafletProxy("mainmap") %>%
-        clearShapes() %>%
-        clearControls() %>%
-        addSimpleGraticule(interval = 1, group = "Graticule")
-    }
-
+                title = HTML('Catch per 1000<br>Hook Hours'))  
+      }
     })
   
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
 # render static plots
-  output$activityplot <- renderPlot({
-    summarylinechart
+  output$activityplot <- renderPlotly({
+    trips_chart
   })
   
-  output$topspeciesplot <- renderPlot({
-    topspeciesbar
+  output$topspeciesplot <- renderPlotly({
+    species_chart
   })
   
 # create reactive gam for cpue over time
   output$cpueplot <- renderPlot({
-
-    filtered_data <- top.sub[Common_Name %in% input$select_species]
     
-    ggplot(filtered_data, aes(x = Retrieval_Begin_Date_Time, y = Species_CPU_Hook_Hours_BLL1000)) +
+    if (length(input$select_species) < 1) {
+      
+      show_alert("Please ensure at least one species is selected.", type="error", showCloseButton=TRUE)
+      
+    } else {
+    
+    gam_data <- top.sub[Common_Name %in% input$select_species]
+    ggplot(gam_data, aes(x = Retrieval_Begin_Date_Time, y = Species_CPU_Hook_Hours_BLL1000)) +
       geom_point() +
       geom_smooth(method = "gam", formula = y ~ s(x), linewidth = 1.25, colour = "#0054a6") + 
-      labs(#title = paste0(input$select_species, " CPUE"),
-           x = " ",
+      labs(x = " ",
            y = "Catch per 1000 Hook Hours") +
       scale_x_datetime(date_breaks = "3 months", date_labels = "%b %Y") +
       theme_minimal() +
@@ -180,28 +174,29 @@ function(input, output, session) {
             axis.title.x = element_text(size = 18, vjust = 0.5),
             axis.text.y = element_text(size = 14),
             axis.title.y = element_text(size = 18))
+    }
   }) %>% bindCache(input$select_species)
-  
-
  
+
 # print total observations for filtered data in ui
- output$text_obs <- renderText({
- format(nrow(filtered_data()), big.mark=",")
- })
+  output$text_obs <- renderText({
+    format(nrow(filtered_data()), big.mark=",")
+  })
 
-  # output$text_sp <- renderUI({
-  #   str1 <- paste0("Showing results for: ")
-  #   str2 <- paste0(input$select_species)
-  #   HTML(paste(strong(str1), str2))
-  # })
-
-
-  output$text_sp1 <- renderText({
-    paste0(input$select_species, collapse = "; ")
+# clarifying text
+  output$gam_text <- renderText({
+    req(input$select_species)
+    paste(paste(input$select_species, collapse = "; "), "CPUE")
   })
   
-  output$text_sp2 <- renderText({
-    paste0(input$select_species, collapse = "; ")
+  output$coa_text <- renderText({
+    req(input$select_species)
+    paste(paste(input$select_species, collapse = "; "), "Condition on Arrival")
+  })
+  
+  output$fate_text <- renderText({
+    req(input$select_species)
+    paste(paste(input$select_species, collapse = "; "), "Fate")
   })
   
 } #end server
