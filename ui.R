@@ -29,12 +29,10 @@ navbarPage(title=div(img(src="mote-logo.png", style = "width:30px;height:27px"),
                                    helpText("Use the following selections to update the data displayed."),
                                    strong("Total Observations"),
                                    verbatimTextOutput("text_obs", placeholder=FALSE),
-                                   p(" "),
-                                   selectInput("select_species", label="Select Species (top 10 available)", choices = sort(unique(top.sub$Common_Name)), selected = "Sandbar Shark",
-                                               selectize = TRUE, multiple=TRUE),#sort(unique(top.sub$Common_Name))[1]),
-                                   #helpText("Top 10 species caught available."),
-                                   sliderInput("years", datetext, min(top.sub$Retrieval_Year), max(top.sub$Retrieval_Year),
-                                                  value = c(min(top.sub$Retrieval_Year), max(top.sub$Retrieval_Year)), sep = "", round = TRUE, step = 1),
+                                   selectInput("select_species", label="Select Species (top 15 available)", choices = sort(unique(top_sharks$Common_Name)), selected = "Sandbar Shark",
+                                               selectize = TRUE, multiple=TRUE),
+                                   sliderInput("years", datetext, min(top_sharks$Retrieval_Year), max(top_sharks$Retrieval_Year),
+                                                  value = c(min(top_sharks$Retrieval_Year), max(top_sharks$Retrieval_Year)), sep = "", round = TRUE, step = 1),
                                    checkboxGroupInput("seasons", "Season", 
                                                       choiceNames = list(HTML("<b>Winter</b> (Jan, Feb, Mar)"),
                                                                          HTML("<b>Spring</b> (Apr, May, Jun)"), 
@@ -42,37 +40,35 @@ navbarPage(title=div(img(src="mote-logo.png", style = "width:30px;height:27px"),
                                                                          HTML("<b>Fall</b> (Oct, Nov, Dec)")), 
                                                       selected = list("Winter","Spring", "Summer", "Fall"),
                                                       choiceValues = list("Winter","Spring", "Summer", "Fall")),
-                                   submitButton("Update")
+                                   actionButton("update", "Update")
                       ), #sidebarPanel
                       mainPanel(
                         tabsetPanel(
                           tabPanel("Map",
-                                   withLoader(leafletOutput("mainmap", height = "85vh"), type="html", loader="loader4")
+                                   withLoader(leafletOutput("map", height = "85vh"), type="html", loader="loader4")
                                    ),
                           tabPanel("Figures",
                                    fluidRow(
-                                     column(withLoader(plotOutput("activityplot"), type="html", loader="loader4"), width=6),
-                                     column(withLoader(plotOutput("topspeciesplot"), type="html", loader="loader4"), width=6)
+                                     column(
+                                       h4("Trips, Sea Days, and Hauls by Year"),
+                                       withLoader(plotlyOutput("activityplot"), type="html", loader="loader4"), width=6),
+                                     column(
+                                       h4("Top Species Catch Events by Year"),
+                                       withLoader(plotlyOutput("topspeciesplot"), type="html", loader="loader4"), width=6)
                                    ),
-                                   p(" "),
-                                   wellPanel(helpText("Use the dropdown box on the left to change the species displayed in the following figure."),
-                                             htmlOutput("text_sp1")),
+                                   br(),
+                                   h4(textOutput("gam_text")),
                                    withLoader(plotOutput("cpueplot"), type="html", loader="loader4"),
-                                   p(" ")
-                          ), #tabPanel 2
-                          #textOutput("radio.txt"),
-                          #tableOutput("trouble"),
-                          #tableOutput("trouble2")
+                                   br()
+                          ), #tabPanel 
                           tabPanel("Tables",
                                    h4("All Shark Species Caught"),
                                    withLoader(DT::dataTableOutput("topspeciestable"), type="html", loader="loader4"),
-                                   p(" "),
-                                   wellPanel(helpText("Use the dropdown box on the left to change the species displayed in the following tables."),
-                                             htmlOutput("text_sp2")),
+                                   br(),
                                    fluidRow(
-                                     column(h4("Condition on Arrival"),
+                                     column(h4(textOutput("coa_text")),
                                             withLoader(tableOutput("coatable"), type="html", loader="loader4"), width=6),
-                                     column(h4("Catch Fate"),
+                                     column(h4(textOutput("fate_text")),
                                             withLoader(tableOutput("fatetable"), type="html", loader="loader4"), width=6)
                                    ) #fluidRow
                                    ), # tabPanel
