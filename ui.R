@@ -58,7 +58,7 @@ navbarPage(title=div(img(src="mote-logo.png", style = "width:30px;height:27px"),
                                    ),
                                    br(),
                                    h4(textOutput("gam_text")),
-                                   withLoader(plotOutput("cpueplot"), type="html", loader="loader4"),
+                                   withLoader(plotlyOutput("cpueplot"), type="html", loader="loader4"),
                                    br()
                           ), #tabPanel 
                           tabPanel("Tables",
