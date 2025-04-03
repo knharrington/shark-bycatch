@@ -8,6 +8,7 @@
 {
   library(tidyverse)
   library(data.table)
+  library(mgcv)
   library(janitor)
   library(sf)
   library(leaflet)
