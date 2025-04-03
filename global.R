@@ -12,11 +12,12 @@
   library(janitor)
   library(sf)
   library(leaflet)
+  library(plotly)
   library(shiny)
   library(shinyWidgets)
   library(htmlwidgets)
-  library(shinythemes)
-  library(shinycustomloader)
+  library(bslib)
+  library(shinycssloaders)
   library(leaflet.extras2)
 }
 
