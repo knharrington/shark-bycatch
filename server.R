@@ -5,9 +5,35 @@
 ################################################################################
 
 function(input, output, session) {
-  
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #   
+
+  # Open modal for about the data info 
+  observeEvent(input$open_about, {
+    showModal(modalDialog(
+      title = "About the Data",
+      HTML("
+    <div style='line-height: 1.6; font-size: 16px;'>
+      <p>
+        The data displayed in this app was collected through a 25% review of electronic monitoring (EM) footage from bottom longline vessels in the 
+        Gulf of Mexico reef fish fishery (2016–2024). This effort is part of the Center for Fisheries Electronic Monitoring at 
+        Mote Marine Laboratory’s voluntary EM program.
+      </p>
+      <p>
+        For more information, please visit 
+        <a href='https://www.mote.org/cfemm' target='_blank' style='color: #00aae7; text-decoration: underline;'>
+          mote.org/cfemm
+        </a>.
+      </p>
+    </div>
+      "),
+      easyClose = TRUE,
+      footer = modalButton("Close")
+    ))
+  })
+     
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-  
+
   # Condition table
   Condition.Table <- reactive({
     top_sub_filtered <- top.sub[top.sub$Common_Name %in% input$select_species,]
@@ -218,7 +244,8 @@ function(input, output, session) {
         xaxis = list(title = "", tickformat = "%b %Y", type = "date"),
         yaxis = list(title = "Catch per 1000 Hook Hours"),
         hovermode = "closest",
-        showlegend = TRUE
+        showlegend = TRUE,
+        legend = list(orientation = "h")
       )
     }
   }) %>% bindCache(input$select_species)
