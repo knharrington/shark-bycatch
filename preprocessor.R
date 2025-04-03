@@ -117,8 +117,8 @@ trips_chart <- plot_ly(
   marker = list(size = 6, symbol = 'circle')
   ) %>%
   layout(
-    xaxis = list(title = "", tickformat = "d", showgrid = TRUE),
-    yaxis = list(title = "Total Count", tickformat = ",d", showgrid = TRUE),
+    xaxis = list(visible = T, showgrid = T, title = "", tickformat = "d"),
+    yaxis = list(visible = T, showgrid = T, title = "Total Counts", tickformat = ",d"),
     legend = list(title = list(text = "Metric"), orientation = "h")
   ) %>%
   config(displaylogo = FALSE,
@@ -129,7 +129,7 @@ trips_chart <- plot_ly(
       width = 900,
       scale = 2
     )
-  )
+  ) 
 
 # Top species caught over time
 bar_modified <- shark_data %>%
