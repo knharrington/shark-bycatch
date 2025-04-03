@@ -143,17 +143,53 @@ function(input, output, session) {
   
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
-# render static plots
+# render static activity plot
   output$activityplot <- renderPlotly({
     trips_chart
   })
   
+# render static species catch plot  
   output$topspeciesplot <- renderPlotly({
     species_chart
   })
   
-# create reactive gam for cpue over time
-  output$cpueplot <- renderPlot({
+# Creating a GAM for plotly
+  gam_data <- reactive({
+    req(length(input$select_species) > 0)
+    top.sub %>%
+      filter(Common_Name %in% input$select_species) %>%
+      mutate(
+        Retrieval_Begin_Date_Time_NUM = as.numeric(Retrieval_Begin_Date_Time)
+      )
+  })
+  
+# Fit the GAM model
+  gam_model <- reactive({
+    req(gam_data())
+    mgcv::gam(Species_CPU_Hook_Hours_BLL1000 ~ s(Retrieval_Begin_Date_Time_NUM, bs = "cs"), data = gam_data())
+  })
+  
+# Predict fitted values
+  gam_pred <- reactive({
+    req(gam_data(), gam_model())
+    
+    # Create a smooth sequence of time values (100 evenly spaced points)
+    new_x <- seq(
+      min(gam_data()$Retrieval_Begin_Date_Time_NUM, na.rm = TRUE),
+      max(gam_data()$Retrieval_Begin_Date_Time_NUM, na.rm = TRUE),
+      length.out = 100
+    )
+    
+    # Predict on that smooth grid
+    pred_df <- data.frame(Retrieval_Begin_Date_Time_NUM = new_x)
+    pred_df$Retrieval_Begin_Date_Time <- as.POSIXct(new_x, origin = "1970-01-01", tz = "UTC")
+    pred_df$y_pred <- predict(gam_model(), newdata = pred_df, type = "response")
+    
+    pred_df
+  }) 
+  
+# Make a Plotly GAM visualization
+  output$cpueplot <- renderPlotly({
     
     if (length(input$select_species) < 1) {
       
@@ -161,23 +197,34 @@ function(input, output, session) {
       
     } else {
     
-    gam_data <- top.sub[Common_Name %in% input$select_species]
-    ggplot(gam_data, aes(x = Retrieval_Begin_Date_Time, y = Species_CPU_Hook_Hours_BLL1000)) +
-      geom_point() +
-      geom_smooth(method = "gam", formula = y ~ s(x), linewidth = 1.25, colour = "#0054a6") + 
-      labs(x = " ",
-           y = "Catch per 1000 Hook Hours") +
-      scale_x_datetime(date_breaks = "3 months", date_labels = "%b %Y") +
-      theme_minimal() +
-      theme(plot.title = element_text(size = 20),
-            axis.text.x = element_text(size = 14, angle = 45, vjust = 0.5),
-            axis.title.x = element_text(size = 18, vjust = 0.5),
-            axis.text.y = element_text(size = 14),
-            axis.title.y = element_text(size = 18))
+    req(gam_data(), gam_pred())
+    
+    plot_ly() %>%
+      add_markers(
+        data = gam_data(),
+        x = ~Retrieval_Begin_Date_Time,
+        y = ~Species_CPU_Hook_Hours_BLL1000,
+        marker = list(color = "#00aae7", opacity = 0.5),
+        name = "Observation"
+      ) %>%
+      add_lines(
+        data = gam_pred(),
+        x = ~Retrieval_Begin_Date_Time,
+        y = ~y_pred,
+        line = list(color = "#0054a6", width = 2),
+        name = "Smoothed CPUE"
+      ) %>%
+      layout(
+        xaxis = list(title = "", tickformat = "%b %Y", type = "date"),
+        yaxis = list(title = "Catch per 1000 Hook Hours"),
+        hovermode = "closest",
+        showlegend = TRUE
+      )
     }
   }) %>% bindCache(input$select_species)
- 
-
+  
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #   
+  
 # print total observations for filtered data in ui
   output$text_obs <- renderText({
     format(nrow(filtered_data()), big.mark=",")
