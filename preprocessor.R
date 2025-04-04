@@ -111,9 +111,11 @@ trips_chart <- plot_ly(
   marker = list(size = 6, symbol = 'circle')
   ) %>%
   layout(
-    xaxis = list(visible = T, showgrid = T, title = "", tickformat = "d"),
-    yaxis = list(visible = T, showgrid = T, title = "Total Counts", tickformat = ",d"),
-    legend = list(title = list(text = "Metric"), orientation = "h")
+    xaxis = list(visible = T, showgrid = T, title = "", tickformat = "d", gridcolor = "#cccccc"),
+    yaxis = list(visible = T, showgrid = T, title = "Total Counts", tickformat = ",d", gridcolor = "#cccccc"),
+    legend = list(title = list(text = "Metric"), orientation = "h"),
+    paper_bgcolor = "rgba(0,0,0,0)",  
+    plot_bgcolor = "rgba(0,0,0,0)"
   ) %>%
   config(displaylogo = FALSE,
     toImageButtonOptions = list(
@@ -155,13 +157,15 @@ species_chart <- plot_ly(
   layout(
     barmode = "stack",
     xaxis = list(title = "", tickformat = "d"),
-    yaxis = list(title = "Total Catch Events", tickformat = ",d"),
+    yaxis = list(title = "Total Catch Events", tickformat = ",d", gridcolor = "#cccccc"),
     legend = list(
       title = list(text = "Common Name"),
       orientation = "v",
       x = 1.02,
       y = 1
-    )#,
+    ),
+    paper_bgcolor = "rgba(0,0,0,0)",  
+    plot_bgcolor = "rgba(0,0,0,0)"   
     #margin = list(r = 130)  # extra room for long legend
   ) %>%
   config(
