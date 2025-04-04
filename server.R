@@ -46,33 +46,33 @@ function(input, output, session) {
      
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
-  # Condition table
-  Condition.Table <- reactive({
-    top_sub_filtered <- top.sub[top.sub$Common_Name %in% input$select_species,]
-    summary_data <- top_sub_filtered %>%
-      group_by(Condition_On_Arrival) %>%
-      rename(`Condition On Arrival` = Condition_On_Arrival) %>%
-      summarise(`Number Caught` = n()) %>%
-      mutate(`% of Catch` = round(`Number Caught` / sum(`Number Caught`) * 100, 2)) %>%
-      adorn_totals("row") %>%
-      mutate(`Number Caught` = format(`Number Caught`, big.mark = ","),
-             `% of Catch` = ifelse(as.numeric(`% of Catch`) >= 99.8, "100.00", sprintf("%.2f", `% of Catch`)))
-    as.data.frame(summary_data)
-  }) %>% bindCache(input$select_species)
-
-  # Fate table
-  Fate.Table <- reactive({
-    top_sub_filtered <- top.sub[top.sub$Common_Name %in% input$select_species,]
-    summary_data <- top_sub_filtered %>%
-      group_by(Catch_Fate) %>%
-      rename(`Catch Fate` = Catch_Fate) %>%
-      summarise(`Number Caught` = n()) %>%
-      mutate(`% of Catch` = round(`Number Caught` / sum(`Number Caught`) * 100, 2)) %>%
-      adorn_totals("row") %>%
-      mutate(`Number Caught` = format(`Number Caught`, big.mark = ","),
-             `% of Catch` = ifelse(as.numeric(`% of Catch`) >= 99.8, "100.00", sprintf("%.2f", `% of Catch`)))
-    as.data.frame(summary_data)
-  }) %>% bindCache(input$select_species)
+  # # Condition table
+  # Condition.Table <- reactive({
+  #   top_sub_filtered <- top_sharks[top_sharks$Common_Name %in% input$select_species,]
+  #   summary_data <- top_sub_filtered %>%
+  #     group_by(Condition_On_Arrival) %>%
+  #     rename(`Condition On Arrival` = Condition_On_Arrival) %>%
+  #     summarise(`Number Caught` = n()) %>%
+  #     mutate(`% of Catch` = round(`Number Caught` / sum(`Number Caught`) * 100, 2)) %>%
+  #     adorn_totals("row") %>%
+  #     mutate(`Number Caught` = format(`Number Caught`, big.mark = ","),
+  #            `% of Catch` = ifelse(as.numeric(`% of Catch`) >= 99.8, "100.00", sprintf("%.2f", `% of Catch`)))
+  #   as.data.frame(summary_data)
+  # }) %>% bindCache(input$select_species)
+  # 
+  # # Fate table
+  # Fate.Table <- reactive({
+  #   top_sub_filtered <- top_sharks[top_sharks$Common_Name %in% input$select_species,]
+  #   summary_data <- top_sub_filtered %>%
+  #     group_by(Catch_Fate) %>%
+  #     rename(`Catch Fate` = Catch_Fate) %>%
+  #     summarise(`Number Caught` = n()) %>%
+  #     mutate(`% of Catch` = round(`Number Caught` / sum(`Number Caught`) * 100, 2)) %>%
+  #     adorn_totals("row") %>%
+  #     mutate(`Number Caught` = format(`Number Caught`, big.mark = ","),
+  #            `% of Catch` = ifelse(as.numeric(`% of Catch`) >= 99.8, "100.00", sprintf("%.2f", `% of Catch`)))
+  #   as.data.frame(summary_data)
+  # }) %>% bindCache(input$select_species)
   
   # render the data tables 
   output$topspeciestable <- DT::renderDataTable(All.Species) 
@@ -194,7 +194,7 @@ function(input, output, session) {
 # Creating a GAM for plotly
   gam_data <- reactive({
     req(length(input$select_species) > 0)
-    top.sub %>%
+    top_sharks %>%
       filter(Common_Name %in% input$select_species) %>%
       mutate(
         Retrieval_Begin_Date_Time_NUM = as.numeric(Retrieval_Begin_Date_Time)
@@ -253,11 +253,13 @@ function(input, output, session) {
         name = "Smoothed CPUE"
       ) %>%
       layout(
-        xaxis = list(title = "", tickformat = "%b %Y", type = "date"),
-        yaxis = list(title = "Catch per 1000 Hook Hours"),
+        xaxis = list(title = "", tickformat = "%b %Y", type = "date", gridcolor = "#cccccc"),
+        yaxis = list(title = "Catch per 1000 Hook Hours", gridcolor = "#cccccc"),
         hovermode = "closest",
         showlegend = TRUE,
-        legend = list(orientation = "h")
+        legend = list(orientation = "h"),
+        paper_bgcolor = "rgba(0,0,0,0)",  
+        plot_bgcolor = "rgba(0,0,0,0)"
       )
     }
   }) %>% bindCache(input$select_species)
