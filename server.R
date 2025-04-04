@@ -7,23 +7,35 @@
 function(input, output, session) {
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #   
-
+  # Open modal on startup
+  observe({
+    showModal(modalDialog(
+      title = "Welcome to the Shark Bycatch Data Summary Dashboard",
+      HTML("
+        <div style='line-height: 1.6; font-size: 16px;'>
+        <p>This dashboard displays catch per unit effort (CPUE) trends derived from electronic monitoring data collected by
+        the Center for Fisheries Electronic Monitoring at Mote Marine Laboratory.</p>
+        <p>Select species and filters from the sidebar to get started, or click 'About the Data' in the sidebar for more details.</p>
+      "),
+      easyClose = TRUE,
+      footer = modalButton("Okay")
+    ))
+  })
+  
   # Open modal for about the data info 
   observeEvent(input$open_about, {
     showModal(modalDialog(
       title = "About the Data",
       HTML("
-    <div style='line-height: 1.6; font-size: 16px;'>
-      <p>
-        The data displayed in this app was collected through a 25% review of electronic monitoring (EM) footage from bottom longline vessels in the 
-        Gulf of Mexico reef fish fishery (2016–2024). This effort is part of the Center for Fisheries Electronic Monitoring at 
-        Mote Marine Laboratory’s voluntary EM program.
-      </p>
+      <div style='line-height: 1.6; font-size: 16px;'>
+      <p>The data displayed in this app was collected through a 25% review of electronic monitoring (EM) footage from bottom longline vessels in the 
+        Gulf of America reef fish fishery (2016–2024). This effort is part of the Center for Fisheries Electronic Monitoring at 
+        Mote Marine Laboratory’s voluntary EM program.</p>
       <p>
         For more information, please visit 
         <a href='https://www.mote.org/cfemm' target='_blank' style='color: #00aae7; text-decoration: underline;'>
-          mote.org/cfemm
-        </a>.
+          mote.org/cfemm.
+        </a>
       </p>
     </div>
       "),
@@ -65,9 +77,9 @@ function(input, output, session) {
   # render the data tables 
   output$topspeciestable <- DT::renderDataTable(All.Species) 
 
-  output$coatable <- renderTable(Condition.Table(), rownames = FALSE, striped = TRUE)
+  # output$coatable <- renderTable(Condition.Table(), rownames = FALSE, striped = TRUE)
   
-  output$fatetable <- renderTable(Fate.Table(), rownames = FALSE, striped = TRUE)
+  # output$fatetable <- renderTable(Fate.Table(), rownames = FALSE, striped = TRUE)
   
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #   
   
@@ -130,9 +142,9 @@ function(input, output, session) {
       
       cpue_popup <- paste0("<strong>CPUE: </strong>", round(gridvalues()$CPUE, digits = 2),
                            "<br><strong>Depth (m): </strong>", round(gridvalues()$Depth.mean, digits = 2))
-      num_pal <- colorNumeric(palette = "Reds", domain = gridvalues()$CPUE, reverse = FALSE)
+      num_pal <- colorNumeric(palette = coral_palette(9), domain = gridvalues()$CPUE, reverse = FALSE)
 
-      proxy <- leafletProxy("map") %>%
+      leafletProxy("map") %>%
         clearShapes() %>%
         clearControls() %>%
         addSimpleGraticule(interval = 1, group = "Graticule") %>%
@@ -263,15 +275,15 @@ function(input, output, session) {
     paste(paste(input$select_species, collapse = "; "), "CPUE")
   })
   
-  output$coa_text <- renderText({
-    req(input$select_species)
-    paste(paste(input$select_species, collapse = "; "), "Condition on Arrival")
-  })
-  
-  output$fate_text <- renderText({
-    req(input$select_species)
-    paste(paste(input$select_species, collapse = "; "), "Fate")
-  })
+  # output$coa_text <- renderText({
+  #   req(input$select_species)
+  #   paste(paste(input$select_species, collapse = "; "), "Condition on Arrival")
+  # })
+  # 
+  # output$fate_text <- renderText({
+  #   req(input$select_species)
+  #   paste(paste(input$select_species, collapse = "; "), "Fate")
+  # })
   
 } #end server
 
