@@ -51,12 +51,6 @@ shark_species <- shark_data %>%
 setnames(shark_species, old = "Common_Name", new = "Common Name")
 setDT(shark_species)
 
-# subset to the unique set-haul event level (for cpues and hotspots)
-# species.sub.SHEs = unique(top.sub[,c("Unique_Retrieval","Species_CPU_Hook_Hours_BLL1000","Indiv_CPU_Hook_Hours_VL","Indiv_CPU_Hook_Hours_BLL1000","Shark",
-#                                      "Species_CPU_km","Proportion_Retained","Proportion_Discarded","Species_CPU_Hook_Hours_VL","Species_CPU_Fishing_Time",
-#                                      "Species_Ret_CPU_Fishing_Time","Catch_Grid_Name","Trip_Type","Retrieval_Year","Common_Name", "Retrieval_Season", "Depth",
-#                                      "Catch_Longitude", "Catch_Latitude", "Centroid_Longitude", "Centroid_Latitude")])
-
 # grid shape needed
 {
 gridshp <- st_read(dsn="shapefiles", layer = "GOM_GRID_10MIN_smooth")
@@ -186,5 +180,9 @@ mindate <- format(as.Date(min(shark_data$Retrieval_Begin_Date)), format = "%m/%Y
 maxdate <- format(as.Date(max(shark_data$Retrieval_Begin_Date)), format = "%m/%Y")
 datetext <- paste0("Time Range (", mindate, " - ", maxdate, ")")
 
+# Coral palette
+coral_palette <- colorRampPalette(c("#fde4df", "#f37163", "#8c1e1a"))
+
 # Save all necessary objects to an .RData file
-save(top_sharks, gridshp, shark_species, moteport, mote_icon, homeport, port_icon, trips_chart, species_chart, datetext, file = "data/preprocess.RData")
+save(top_sharks, gridshp, shark_species, moteport, mote_icon, homeport, port_icon, trips_chart, species_chart, datetext, coral_palette,
+     file = "data/preprocess.RData")
