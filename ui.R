@@ -16,7 +16,8 @@ cards <- list(
     full_screen = TRUE,
     height = "800px",
     card_header("Map"),
-    card_body(leafletOutput("map"))
+    card_body(leafletOutput("map", height = "100%"),
+              style = "padding: 0; height: 100%;")
   ), # 1 map card
   card(
     full_screen = TRUE,
