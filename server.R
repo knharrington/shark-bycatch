@@ -6,6 +6,8 @@
 
 function(input, output, session) {
 
+  #bs_themer()
+  
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #   
   # Open modal on startup
   observe({
@@ -90,6 +92,7 @@ function(input, output, session) {
           Retrieval_Year >= input$years[1] &
           Retrieval_Year <= input$years[2] &
           Common_Name %in% input$select_species &
+          Shark_Length_Estimate %in% input$size &
           Retrieval_Season %in% input$seasons
         )
   })
@@ -134,12 +137,13 @@ function(input, output, session) {
   # reactive catch events
   observeEvent(input$update, {
     
-    if (length(input$seasons) < 1 | length(input$select_species) < 1) {
+    # if (length(input$seasons) < 1 | length(input$select_species) < 1 | length(input$size) < 1) {
+    #   
+    #   show_alert("Please ensure at least one species, size, and season is selected.", type="error", showCloseButton=TRUE)
+    # 
+    # } else {
       
-      show_alert("Please ensure at least one species and season is selected.", type="error", showCloseButton=TRUE)
-    
-    } else {
-      
+      if (nrow(gridvalues()) > 0) {
       cpue_popup <- paste0("<strong>CPUE: </strong>", round(gridvalues()$CPUE, digits = 2),
                            "<br><strong>Depth (m): </strong>", round(gridvalues()$Depth.mean, digits = 2))
       num_pal <- colorNumeric(palette = coral_palette(9), domain = gridvalues()$CPUE, reverse = FALSE)
@@ -147,11 +151,6 @@ function(input, output, session) {
       leafletProxy("map") %>%
         clearShapes() %>%
         clearControls() %>%
-        addSimpleGraticule(interval = 1, group = "Graticule") %>%
-        addLayersControl(
-          overlayGroups = c("Graticule"),
-          position ="topright",
-          options = layersControlOptions(collapsed = FALSE)) %>%
         
         addMarkers(data = moteport,
                  popup = paste0("<strong>", moteport$Home_Port, "</strong><br>", moteport$City_State),
@@ -175,11 +174,41 @@ function(input, output, session) {
                 pal = num_pal,
                 values = gridvalues()$CPUE,
                 opacity = 1,
-                title = HTML('Catch per 1000<br>Hook Hours'))  
-      }
+                title = HTML('Catch per 1000<br>Hook Hours'))  %>%
+        addSimpleGraticule(interval = 1, group = "Graticule") %>%
+        addLayersControl(
+          overlayGroups = c("Graticule"),
+          position ="topright",
+          options = layersControlOptions(collapsed = FALSE)) %>%
+        hideGroup("Graticule")
+        
+        } else {
+          leafletProxy("map") %>%
+            clearShapes() %>%
+            clearControls() %>%
+            
+            addMarkers(data = moteport,
+                       popup = paste0("<strong>", moteport$Home_Port, "</strong><br>", moteport$City_State),
+                       icon = mote_icon,
+                       lng= ~Longitude,
+                       lat= ~Latitude) %>%
+            addMarkers(data=homeport,
+                       popup=paste0(homeport$CITY, ", ", homeport$STATE),
+                       icon=port_icon,
+                       lng= ~LON,
+                       lat= ~LAT) %>%
+            addSimpleGraticule(interval = 1, group = "Graticule") %>%
+            addLayersControl(
+              overlayGroups = c("Graticule"),
+              position ="topright",
+              options = layersControlOptions(collapsed = FALSE)) %>%
+            hideGroup("Graticule")
+        }
+     # }
     })
   
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+thematic_shiny()
 
 # render static activity plot
   output$activityplot <- renderPlotly({
@@ -204,7 +233,7 @@ function(input, output, session) {
 # Fit the GAM model
   gam_model <- reactive({
     req(gam_data())
-    mgcv::gam(Species_CPU_Hook_Hours_BLL1000 ~ s(Retrieval_Begin_Date_Time_NUM, bs = "cs"), data = gam_data())
+    mgcv::gam(Species_CPU_Hook_Hours_BLL1000 ~ s(Retrieval_Begin_Date_Time_NUM, bs = "cs", k=5), data = gam_data())
   })
   
 # Predict fitted values
@@ -229,11 +258,11 @@ function(input, output, session) {
 # Make a Plotly GAM visualization
   output$cpueplot <- renderPlotly({
     
-    if (length(input$select_species) < 1) {
-      
-      show_alert("Please ensure at least one species is selected.", type="error", showCloseButton=TRUE)
-      
-    } else {
+    # if (length(input$select_species) < 1) {
+    #   
+    #   show_alert("Please ensure at least one species is selected.", type="error", showCloseButton=TRUE)
+    #   
+    # } else {
     
     req(gam_data(), gam_pred())
     
@@ -261,7 +290,7 @@ function(input, output, session) {
         paper_bgcolor = "rgba(0,0,0,0)",  
         plot_bgcolor = "rgba(0,0,0,0)"
       )
-    }
+    #}
   }) %>% bindCache(input$select_species)
   
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #   
@@ -274,7 +303,7 @@ function(input, output, session) {
 # clarifying text
   output$gam_text <- renderText({
     req(input$select_species)
-    paste(paste(input$select_species, collapse = "; "), "CPUE")
+    paste(paste(input$select_species, collapse = "; "), "CPUE (All Sizes)")
   })
   
   # output$coa_text <- renderText({
