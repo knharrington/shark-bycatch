@@ -19,6 +19,7 @@
   library(bslib)
   library(shinycssloaders)
   library(leaflet.extras2)
+  library(thematic)
 }
 
 load("data/preprocess.RData")

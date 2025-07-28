@@ -13,7 +13,7 @@ library(leaflet)
 library(plotly)
 
 # Most recent export
-Data.In <- fread("data/Annotations-2025-03-19.csv")
+Data.In <- fread("data/Annotations-2025-07-28.csv")
 
 # Filter for longline shark interactions
 shark_data <- Data.In %>%
@@ -92,7 +92,7 @@ summary_data <- shark_data %>%
     cols = -Year,
     names_to = "Data_Type",
     values_to = "Count"
-  )
+  ) #%>% rename(Metric = Data_Type, `Total Counts` = Count)
 
 # Custom brand palette
 sum_pal <- c("Trips" = "#f37163", "Sea Days" = "#0054a6", "Hauls" = "#00aae7")
@@ -114,7 +114,7 @@ trips_chart <- plot_ly(
     xaxis = list(visible = T, showgrid = T, title = "", tickformat = "d", gridcolor = "#cccccc"),
     yaxis = list(visible = T, showgrid = T, title = "Total Counts", tickformat = ",d", gridcolor = "#cccccc"),
     legend = list(title = list(text = "Metric"), orientation = "h"),
-    paper_bgcolor = "rgba(0,0,0,0)",  
+    paper_bgcolor = "rgba(0,0,0,0)",
     plot_bgcolor = "rgba(0,0,0,0)"
   ) %>%
   config(displaylogo = FALSE,
@@ -125,7 +125,39 @@ trips_chart <- plot_ly(
       width = 900,
       scale = 2
     )
-  ) 
+  )
+
+# library(ggiraph)
+# p <- ggplot(data=summary_data, aes(x=Year, y=Count, color=Data_Type)) +
+#   geom_line_interactive() +
+#   geom_point_interactive(aes(tooltip = Count, data_id=Count), size=2, hover_nearest=TRUE) + 
+#   scale_color_manual(values = sum_pal) +
+#   scale_x_continuous(breaks = seq(min(summary_data$Year), max(summary_data$Year),1), limits = c(min(summary_data$Year), max(summary_data$Year))) +
+#   #scale_y_continuous(expand = c(0,0)) +
+#   theme(
+#     axis.line = element_line(linewidth=.25),
+#     axis.title.x = element_blank(),
+#     legend.position = "bottom",
+#     panel.background= element_blank()
+#   )
+# 
+# girafe(ggobj = p,
+#        options = list(
+#          opts_hover(css = "r:4;"),
+#          opts_tooltip(use_fill = TRUE),
+#          #opts_hover_inv(css = "opacity:0.2;"),
+#          opts_zoom(max = 10)
+#        )
+#       )
+  
+# ggplotly(p) %>%
+#   layout(
+#     xaxis = list(visible = T, showgrid = T, title = "", tickformat = "d", gridcolor = "#cccccc"),
+#     yaxis = list(visible = T, showgrid = T, tickformat = ",d", gridcolor = "#cccccc"),
+#     legend = list(orientation = "h"),
+#     paper_bgcolor = "rgba(0,0,0,0)",
+#     plot_bgcolor = "rgba(0,0,0,0)"
+#   )
 
 # Top species caught over time
 bar_modified <- shark_data %>%
@@ -138,7 +170,7 @@ bar_modified <- shark_data %>%
 
 num_colors <- nlevels(bar_modified$Common_Name)
 ramp_pal <- colorRampPalette(c("#f37163", "#0054a6", "#00aae7"))(num_colors)
-color_mapping <- setNames(custom_colors, levels(bar_modified$Common_Name))
+color_mapping <- setNames(ramp_pal, levels(bar_modified$Common_Name))
 
 species_chart <- plot_ly(
   data = bar_modified,
@@ -190,3 +222,4 @@ coral_palette <- colorRampPalette(c("#fde4df", "#f37163", "#8c1e1a"))
 # Save all necessary objects to an .RData file
 save(top_sharks, gridshp, shark_species, moteport, mote_icon, homeport, port_icon, trips_chart, species_chart, datetext, coral_palette,
      file = "data/preprocess.RData")
+
