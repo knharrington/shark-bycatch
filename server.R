@@ -131,7 +131,27 @@ function(input, output, session) {
       addProviderTiles("Esri.OceanBasemap", options = providerTileOptions(variant = "Ocean/World_Ocean_Reference"), group = "Basemap") %>%
       setView(lng=-88.5, lat=27, zoom=6)  %>%
       addScaleBar(position = 'topleft',
-                  options = scaleBarOptions(maxWidth = 100, metric = TRUE, imperial = TRUE, updateWhenIdle = FALSE)) 
+                  options = scaleBarOptions(maxWidth = 100, metric = TRUE, imperial = TRUE, updateWhenIdle = FALSE)) %>%
+      addMarkers(data = moteport,
+                 popup = paste0("<strong>", moteport$Home_Port, "</strong><br>", moteport$City_State),
+                 icon = mote_icon,
+                 lng= ~Longitude,
+                 lat= ~Latitude) %>%
+      addMarkers(data=homeport,
+                 popup=paste0(homeport$CITY, ", ", homeport$STATE),
+                 icon=port_icon,
+                 lng= ~LON,
+                 lat= ~LAT) %>%
+      addSimpleGraticule(interval = 1, group = "Graticule") %>%
+      addLayersControl(
+        overlayGroups = c("Graticule"),
+        position ="topright",
+        options = layersControlOptions(collapsed = FALSE)) %>%
+      hideGroup("Graticule") %>%
+      addLabelOnlyMarkers(lng=-88.5, lat=27, group="map-text",
+                       label="Update map to display data.", 
+                       labelOptions = labelOptions(noHide=TRUE, direction="top", textOnly=TRUE, textsize = "18px",
+                                                   style=list("font-weight" = "bold")))
   })
 
   # reactive catch events
@@ -149,19 +169,9 @@ function(input, output, session) {
       num_pal <- colorNumeric(palette = coral_palette(9), domain = gridvalues()$CPUE, reverse = FALSE)
 
       leafletProxy("map") %>%
+        clearGroup("map-text") %>%
         clearShapes() %>%
         clearControls() %>%
-        
-        addMarkers(data = moteport,
-                 popup = paste0("<strong>", moteport$Home_Port, "</strong><br>", moteport$City_State),
-                 icon = mote_icon,
-                 lng= ~Longitude,
-                 lat= ~Latitude) %>%
-        addMarkers(data=homeport,
-                 popup=paste0(homeport$CITY, ", ", homeport$STATE),
-                 icon=port_icon,
-                 lng= ~LON,
-                 lat= ~LAT) %>%
         
         addPolygons(data = st_zm(gridvalues()),
                   fillColor = ~num_pal(CPUE),
@@ -174,35 +184,14 @@ function(input, output, session) {
                 pal = num_pal,
                 values = gridvalues()$CPUE,
                 opacity = 1,
-                title = HTML('Catch per 1000<br>Hook Hours'))  %>%
-        addSimpleGraticule(interval = 1, group = "Graticule") %>%
-        addLayersControl(
-          overlayGroups = c("Graticule"),
-          position ="topright",
-          options = layersControlOptions(collapsed = FALSE)) %>%
-        hideGroup("Graticule")
+                title = HTML('Catch per 1000<br>Hook Hours'))  
         
         } else {
           leafletProxy("map") %>%
+            clearGroup("map-text") %>%
             clearShapes() %>%
-            clearControls() %>%
+            clearControls() 
             
-            addMarkers(data = moteport,
-                       popup = paste0("<strong>", moteport$Home_Port, "</strong><br>", moteport$City_State),
-                       icon = mote_icon,
-                       lng= ~Longitude,
-                       lat= ~Latitude) %>%
-            addMarkers(data=homeport,
-                       popup=paste0(homeport$CITY, ", ", homeport$STATE),
-                       icon=port_icon,
-                       lng= ~LON,
-                       lat= ~LAT) %>%
-            addSimpleGraticule(interval = 1, group = "Graticule") %>%
-            addLayersControl(
-              overlayGroups = c("Graticule"),
-              position ="topright",
-              options = layersControlOptions(collapsed = FALSE)) %>%
-            hideGroup("Graticule")
         }
      # }
     })
