@@ -1,6 +1,6 @@
 # Shark Bycatch App
 
-<img width="1915" height="989" alt="shark-bycatch-app" src="https://github.com/user-attachments/assets/b05c9186-e257-4316-810f-20189311088c" />
+<img width="1917" height="919" alt="image" src="https://github.com/user-attachments/assets/5b8c6d01-6482-4509-9275-654eee65983d" />
 
 ## Link to App
 Access the app at [cfemm.shinyapps.io/SharkBycatch_App](cfemm.shinyapps.io/SharkBycatch_App).
