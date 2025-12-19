@@ -77,7 +77,7 @@ function(input, output, session) {
   # }) %>% bindCache(input$select_species)
   
   # render the data tables 
-  output$topspeciestable <- DT::renderDataTable(All.Species) 
+  # output$topspeciestable <- DT::renderDataTable(All.Species) 
 
   # output$coatable <- renderTable(Condition.Table(), rownames = FALSE, striped = TRUE)
   
@@ -110,11 +110,19 @@ function(input, output, session) {
   # Aggregate within grid cells
   aggregated_data <- reactive({
     grid_join() %>%
-      group_by(GRID_ID) %>%
+      group_by(Unique_Retrieval) %>%
       reframe(
+        GRID_ID = first(GRID_ID),
+        Sharks_per_Haul = n(),
         CPUE = mean(Species_CPU_Hook_Hours_BLL1000, na.rm = TRUE),
         Depth.mean = mean(Depth, na.rm = TRUE)
-      ) 
+      ) %>%
+      group_by(GRID_ID) %>%
+      reframe(
+        Sharks_per_Haul_mean = mean(Sharks_per_Haul, na.rm = TRUE),
+        CPUE = mean(CPUE, na.rm = TRUE),
+        Depth.mean = mean(Depth.mean, na.rm = TRUE)
+      )
   })
   
   # Merge the dataset with the grid shape
@@ -142,7 +150,7 @@ function(input, output, session) {
                  icon=port_icon,
                  lng= ~LON,
                  lat= ~LAT) %>%
-      addSimpleGraticule(interval = 1, group = "Graticule") %>%
+      addSimpleGraticule(interval = 1, group = "Graticule", layerId="Graticule") %>%
       addLayersControl(
         overlayGroups = c("Graticule"),
         position ="topright",
@@ -170,8 +178,8 @@ function(input, output, session) {
 
       leafletProxy("map") %>%
         clearGroup("map-text") %>%
-        clearShapes() %>%
-        clearControls() %>%
+        clearGroup("data") %>%
+        removeControl("legend") %>%
         
         addPolygons(data = st_zm(gridvalues()),
                   fillColor = ~num_pal(CPUE),
@@ -179,18 +187,20 @@ function(input, output, session) {
                   color = "black",
                   fillOpacity = 1,
                   highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = FALSE),
-                  popup = cpue_popup) %>%
+                  popup = cpue_popup,
+                  group = "data") %>%
         addLegend(position = 'topright',
                 pal = num_pal,
                 values = gridvalues()$CPUE,
                 opacity = 1,
-                title = HTML('Catch per 1000<br>Hook Hours'))  
+                title = HTML('Catch per 1000<br>Hook Hours'),
+                layerId = "legend")  
         
         } else {
           leafletProxy("map") %>%
             clearGroup("map-text") %>%
-            clearShapes() %>%
-            clearControls() 
+            clearGroup("data") %>%
+            removeControl("legend") 
             
         }
      # }
@@ -261,14 +271,21 @@ thematic_shiny()
         x = ~Retrieval_Begin_Date_Time,
         y = ~Species_CPU_Hook_Hours_BLL1000,
         marker = list(color = "#00aae7", opacity = 0.5),
-        name = "Observation"
+        name = "Observation",
+        text = ~paste(
+          "<b>CPUE:</b>", Species_CPU_Hook_Hours_BLL1000,
+          "<br><b>Haul Date:</b>", paste0(format(Retrieval_Begin_Date_Time, format="%b %d, %Y"))),
+        hoverinfo = "text", showlegend = TRUE
       ) %>%
       add_lines(
         data = gam_pred(),
         x = ~Retrieval_Begin_Date_Time,
         y = ~y_pred,
         line = list(color = "#0054a6", width = 2),
-        name = "Smoothed CPUE"
+        name = "Smoothed CPUE",
+        text = ~paste(
+          "<br><b>Haul Date:</b>", paste0(format(Retrieval_Begin_Date_Time, format="%b %d, %Y"))),
+        hoverinfo = "text", showlegend = TRUE
       ) %>%
       layout(
         xaxis = list(title = "", tickformat = "%b %Y", type = "date", gridcolor = "#cccccc"),
@@ -291,8 +308,12 @@ thematic_shiny()
 
 # clarifying text
   output$gam_text <- renderText({
-    req(input$select_species)
-    paste(paste(input$select_species, collapse = "; "), "CPUE (All Sizes)")
+    if (length(input$select_species) > 0) {
+      req(input$select_species)
+      paste(paste(input$select_species, collapse = "; "), "Catch per Haul (All Sizes)")
+    } else {
+      paste("Shark Catch per Haul (All Sizes)")
+    }
   })
   
   # output$coa_text <- renderText({
