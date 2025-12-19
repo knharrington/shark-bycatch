@@ -53,9 +53,9 @@ setDT(shark_species)
 
 # grid shape needed
 {
-gridshp <- st_read(dsn="shapefiles", layer = "GOM_GRID_10MIN_smooth")
-gridshp=gridshp[1]
-names(gridshp)[names(gridshp) == "FID_1"] <- "GRID_ID"
+gridshp <- st_read(dsn="shapefiles", layer = "GOA_GRID_10MIN")
+gridshp=gridshp[3]
+#names(gridshp)[names(gridshp) == "FID_1"] <- "GRID_ID"
 gridshp <- st_make_valid(gridshp)
 gridshp <- gridshp[st_is_valid(gridshp), ]
 }
@@ -217,7 +217,7 @@ maxdate <- format(as.Date(max(shark_data$Retrieval_Begin_Date)), format = "%m/%Y
 datetext <- paste0("Time Range (", mindate, " - ", maxdate, ")")
 
 # Coral palette
-coral_palette <- colorRampPalette(c("#fde4df", "#f37163", "#8c1e1a"))
+coral_palette <- colorRampPalette(c("#FFFFFF", "#fde4df", "#f37163", "#8c1e1a"))
 
 # Save all necessary objects to an .RData file
 save(top_sharks, gridshp, shark_species, moteport, mote_icon, homeport, port_icon, trips_chart, species_chart, datetext, coral_palette,
