@@ -13,11 +13,19 @@ library(leaflet)
 library(plotly)
 
 # Most recent export
-Data.In <- fread("data/Annotations-2025-11-07.csv")
+cfemm_data <- fread("data/Annotations_20260612.csv")
 
 # Filter for longline shark interactions
-shark_data <- Data.In %>%
-  filter(Trip_Type == "Longline" & Shark == "Y")
+shark_data <- cfemm_data %>%
+  filter(
+    Trip_Type == "Longline", 
+    Shark == "Y",
+    Common_Name %notin% c("Shark, Unidentified", "Carcharhinid, Unidentified")
+    ) %>%
+  mutate(
+    Centroid_Lon = (Retrieval_Begin_Longitude + Retrieval_End_Longitude)/2,
+    Centroid_Lat = (Retrieval_Begin_Latitude + Retrieval_End_Latitude)/2
+  )
 
 # Convert datetime columns
 {
@@ -31,25 +39,11 @@ shark_data[, c("Catch_Date", "Catch_Time_Eastern") := .(format(Catch_Begin_Date_
                                                             format(Catch_Begin_Date_Time, "%H:%M:%S"))]
 shark_data[, Catch_Time_GMT := format(Catch_Begin_Date_Time, "%H:%M:%S", tz = "GMT")]
 }
-# Summarize data using data.table
-shark_summary <- setDT(shark_data)[, .(Row_Count = .N), by = Dataset_ID]
 
 # Subset for top ten species
 top_species <- setDT(shark_data)[, .N, by = .(Retrieval_Year, Common_Name)][order(-N)]
 top_species_all_years_allsharks <- names(sort(tapply(top_species$N, top_species$Common_Name, sum), decreasing = TRUE))[1:15]
 top_sharks <- shark_data[Common_Name %in% top_species_all_years_allsharks]
-
-# Shark species catch table 
-shark_species <- shark_data %>%
-  group_by(Common_Name) %>%
-  summarise(`Number Caught` = n()) %>%
-  arrange(desc(`Number Caught`)) %>%
-  mutate(`%` = round(`Number Caught` / sum(`Number Caught`) * 100, 2)) %>%
-  adorn_totals("row") %>%
-  mutate(`Number Caught` = format(`Number Caught`, big.mark = ","),
-         `%` = ifelse(as.numeric(`%`) >= 99.8, "100.00", sprintf("%.2f", `%`)))
-setnames(shark_species, old = "Common_Name", new = "Common Name")
-setDT(shark_species)
 
 # grid shape needed
 {
@@ -58,7 +52,12 @@ gridshp=gridshp[3]
 #names(gridshp)[names(gridshp) == "FID_1"] <- "GRID_ID"
 gridshp <- st_make_valid(gridshp)
 gridshp <- gridshp[st_is_valid(gridshp), ]
+gridshp <- st_simplify(gridshp, dTolerance=0)
 }
+
+data_joined <- st_as_sf(top_sharks, coords = c("Centroid_Lon","Centroid_Lat"), crs = st_crs(gridshp)) %>%
+  st_join(gridshp) %>%
+  st_drop_geometry()
 
 # Port locations
 {
@@ -111,53 +110,16 @@ trips_chart <- plot_ly(
   marker = list(size = 6, symbol = 'circle')
   ) %>%
   layout(
-    xaxis = list(visible = T, showgrid = T, title = "", tickformat = "d", gridcolor = "#cccccc"),
-    yaxis = list(visible = T, showgrid = T, title = "Total Counts", tickformat = ",d", gridcolor = "#cccccc"),
+    xaxis = list(visible = T, showgrid = T, title = "", tickformat = "d", gridcolor = "#cccccc", fixedrange = TRUE),
+    yaxis = list(visible = T, showgrid = T, title = "Total Counts", tickformat = ",d", gridcolor = "#cccccc", fixedrange = TRUE),
     legend = list(title = list(text = "Metric"), orientation = "h"),
     paper_bgcolor = "rgba(0,0,0,0)",
     plot_bgcolor = "rgba(0,0,0,0)"
   ) %>%
-  config(displaylogo = FALSE,
-    toImageButtonOptions = list(
-      format = "png",
-      filename = "fishing_summary_chart",
-      height = 600,
-      width = 900,
-      scale = 2
-    )
+  config(
+    displaylogo = FALSE,
+    displayModeBar = FALSE
   )
-
-# library(ggiraph)
-# p <- ggplot(data=summary_data, aes(x=Year, y=Count, color=Data_Type)) +
-#   geom_line_interactive() +
-#   geom_point_interactive(aes(tooltip = Count, data_id=Count), size=2, hover_nearest=TRUE) + 
-#   scale_color_manual(values = sum_pal) +
-#   scale_x_continuous(breaks = seq(min(summary_data$Year), max(summary_data$Year),1), limits = c(min(summary_data$Year), max(summary_data$Year))) +
-#   #scale_y_continuous(expand = c(0,0)) +
-#   theme(
-#     axis.line = element_line(linewidth=.25),
-#     axis.title.x = element_blank(),
-#     legend.position = "bottom",
-#     panel.background= element_blank()
-#   )
-# 
-# girafe(ggobj = p,
-#        options = list(
-#          opts_hover(css = "r:4;"),
-#          opts_tooltip(use_fill = TRUE),
-#          #opts_hover_inv(css = "opacity:0.2;"),
-#          opts_zoom(max = 10)
-#        )
-#       )
-  
-# ggplotly(p) %>%
-#   layout(
-#     xaxis = list(visible = T, showgrid = T, title = "", tickformat = "d", gridcolor = "#cccccc"),
-#     yaxis = list(visible = T, showgrid = T, tickformat = ",d", gridcolor = "#cccccc"),
-#     legend = list(orientation = "h"),
-#     paper_bgcolor = "rgba(0,0,0,0)",
-#     plot_bgcolor = "rgba(0,0,0,0)"
-#   )
 
 # Top species caught over time
 bar_modified <- shark_data %>%
@@ -202,13 +164,7 @@ species_chart <- plot_ly(
   ) %>%
   config(
     displaylogo = FALSE,
-    toImageButtonOptions = list(
-      format = "png",
-      filename = "top_species_bar_chart",
-      height = 600,
-      width = 900,
-      scale = 2
-    )
+    modeBarButtonsToRemove = c('toImage', 'lasso2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'select2d')
   )
 
 # text for ui time range
@@ -220,6 +176,6 @@ datetext <- paste0("Time Range (", mindate, " - ", maxdate, ")")
 coral_palette <- colorRampPalette(c("#FFFFFF", "#fde4df", "#f37163", "#8c1e1a"))
 
 # Save all necessary objects to an .RData file
-save(top_sharks, gridshp, shark_species, moteport, mote_icon, homeport, port_icon, trips_chart, species_chart, datetext, coral_palette,
+save(data_joined, top_sharks, gridshp, moteport, mote_icon, homeport, port_icon, trips_chart, species_chart, datetext, coral_palette,
      file = "data/preprocess.RData")
 
