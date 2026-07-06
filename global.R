@@ -22,4 +22,4 @@
   library(thematic)
 }
 
-load("data/preprocess.RData")
+load("preprocess.RData")

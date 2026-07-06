@@ -177,5 +177,5 @@ coral_palette <- colorRampPalette(c("#FFFFFF", "#fde4df", "#f37163", "#8c1e1a"))
 
 # Save all necessary objects to an .RData file
 save(data_joined, top_sharks, gridshp, moteport, mote_icon, homeport, port_icon, trips_chart, species_chart, datetext, coral_palette,
-     file = "data/preprocess.RData")
+     file = "preprocess.RData")
 
