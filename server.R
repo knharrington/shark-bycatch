@@ -8,7 +8,7 @@ function(input, output, session) {
 
   #bs_themer()
   
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #   
+  # ---------------------------- LINKS -----------------------------------------   
   # Open modal on startup
   observe({
     showModal(modalDialog(
@@ -31,7 +31,7 @@ function(input, output, session) {
       HTML("
       <div style='line-height: 1.6; font-size: 16px;'>
       <p>The data displayed in this app was collected through a 25% review of electronic monitoring (EM) footage from bottom longline vessels in the 
-        Gulf of America reef fish fishery (2016–2024). This effort is part of the Center for Fisheries Electronic Monitoring at 
+        Gulf of America reef fish fishery. This effort is part of the Center for Fisheries Electronic Monitoring at 
         Mote Marine Laboratory’s voluntary EM program.</p>
       <p>
         For more information, please visit 
@@ -46,48 +46,11 @@ function(input, output, session) {
     ))
   })
      
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-  # # Condition table
-  # Condition.Table <- reactive({
-  #   top_sub_filtered <- top_sharks[top_sharks$Common_Name %in% input$select_species,]
-  #   summary_data <- top_sub_filtered %>%
-  #     group_by(Condition_On_Arrival) %>%
-  #     rename(`Condition On Arrival` = Condition_On_Arrival) %>%
-  #     summarise(`Number Caught` = n()) %>%
-  #     mutate(`% of Catch` = round(`Number Caught` / sum(`Number Caught`) * 100, 2)) %>%
-  #     adorn_totals("row") %>%
-  #     mutate(`Number Caught` = format(`Number Caught`, big.mark = ","),
-  #            `% of Catch` = ifelse(as.numeric(`% of Catch`) >= 99.8, "100.00", sprintf("%.2f", `% of Catch`)))
-  #   as.data.frame(summary_data)
-  # }) %>% bindCache(input$select_species)
-  # 
-  # # Fate table
-  # Fate.Table <- reactive({
-  #   top_sub_filtered <- top_sharks[top_sharks$Common_Name %in% input$select_species,]
-  #   summary_data <- top_sub_filtered %>%
-  #     group_by(Catch_Fate) %>%
-  #     rename(`Catch Fate` = Catch_Fate) %>%
-  #     summarise(`Number Caught` = n()) %>%
-  #     mutate(`% of Catch` = round(`Number Caught` / sum(`Number Caught`) * 100, 2)) %>%
-  #     adorn_totals("row") %>%
-  #     mutate(`Number Caught` = format(`Number Caught`, big.mark = ","),
-  #            `% of Catch` = ifelse(as.numeric(`% of Catch`) >= 99.8, "100.00", sprintf("%.2f", `% of Catch`)))
-  #   as.data.frame(summary_data)
-  # }) %>% bindCache(input$select_species)
-  
-  # render the data tables 
-  # output$topspeciestable <- DT::renderDataTable(All.Species) 
-
-  # output$coatable <- renderTable(Condition.Table(), rownames = FALSE, striped = TRUE)
-  
-  # output$fatetable <- renderTable(Fate.Table(), rownames = FALSE, striped = TRUE)
-  
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #   
+  # ---------------------------- DATA ------------------------------------------   
   
   # Map point data
   filtered_data <- reactive({
-      top_sharks %>% 
+      data_joined %>% 
         filter(
           Retrieval_Year >= input$years[1] &
           Retrieval_Year <= input$years[2] &
@@ -97,19 +60,9 @@ function(input, output, session) {
         )
   })
   
-  # Convert the data frame to a spatial object
-  filtered_data_sf <- reactive({
-      st_as_sf(filtered_data(), coords = c("Centroid_Longitude", "Centroid_Latitude"), crs = st_crs(gridshp))
-    })
-  
-  # Perform the spatial join
-  grid_join <- reactive({
-      setDT(st_join(filtered_data_sf(), gridshp, join = st_intersects))
-    })
-  
   # Aggregate within grid cells
   aggregated_data <- reactive({
-    grid_join() %>%
+    filtered_data() %>%
       group_by(Unique_Retrieval) %>%
       reframe(
         GRID_ID = first(GRID_ID),
@@ -130,11 +83,11 @@ function(input, output, session) {
     st_as_sf(merge(x = gridshp, y = aggregated_data(), by = "GRID_ID", all.x = FALSE))
   })  
   
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  # ---------------------------- MAPS ------------------------------------------
   
   # base map
   output$map <- renderLeaflet({
-    leaflet() %>%
+    leaflet(options = leafletOptions(attributionControl = FALSE)) %>%
       addProviderTiles("Esri.OceanBasemap", options = providerTileOptions(variant = "Ocean/World_Ocean_Base"), group = "Basemap") %>%
       addProviderTiles("Esri.OceanBasemap", options = providerTileOptions(variant = "Ocean/World_Ocean_Reference"), group = "Basemap") %>%
       setView(lng=-88.5, lat=27, zoom=6)  %>%
@@ -149,30 +102,16 @@ function(input, output, session) {
                  popup=paste0(homeport$CITY, ", ", homeport$STATE),
                  icon=port_icon,
                  lng= ~LON,
-                 lat= ~LAT) %>%
-      addSimpleGraticule(interval = 1, group = "Graticule", layerId="Graticule") %>%
-      addLayersControl(
-        overlayGroups = c("Graticule"),
-        position ="topright",
-        options = layersControlOptions(collapsed = FALSE)) %>%
-      hideGroup("Graticule") %>%
-      addLabelOnlyMarkers(lng=-88.5, lat=27, group="map-text",
-                       label="Update map to display data.", 
-                       labelOptions = labelOptions(noHide=TRUE, direction="top", textOnly=TRUE, textsize = "18px",
-                                                   style=list("font-weight" = "bold")))
+                 lat= ~LAT)
   })
 
   # reactive catch events
-  observeEvent(input$update, {
+  #observeEvent(input$update, {
+  observe({
     
-    # if (length(input$seasons) < 1 | length(input$select_species) < 1 | length(input$size) < 1) {
-    #   
-    #   show_alert("Please ensure at least one species, size, and season is selected.", type="error", showCloseButton=TRUE)
-    # 
-    # } else {
       
       if (nrow(gridvalues()) > 0) {
-      cpue_popup <- paste0("<strong>CPUE: </strong>", round(gridvalues()$CPUE, digits = 2),
+      cpue_popup <- paste0("<strong>Average CPUE: </strong>", round(gridvalues()$CPUE, digits = 2),
                            "<br><strong>Depth (m): </strong>", round(gridvalues()$Depth.mean, digits = 2))
       num_pal <- colorNumeric(palette = coral_palette(9), domain = gridvalues()$CPUE, reverse = FALSE)
 
@@ -193,7 +132,7 @@ function(input, output, session) {
                 pal = num_pal,
                 values = gridvalues()$CPUE,
                 opacity = 1,
-                title = HTML('Catch per 1000<br>Hook Hours'),
+                title = HTML('Average<br>Catch per 1000<br>Hook Hours<br>(CPUE)'),
                 layerId = "legend")  
         
         } else {
@@ -206,7 +145,7 @@ function(input, output, session) {
      # }
     })
   
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+  # --------------------------- PLOTS ------------------------------------------
 thematic_shiny()
 
 # render static activity plot
@@ -222,17 +161,27 @@ thematic_shiny()
 # Creating a GAM for plotly
   gam_data <- reactive({
     req(length(input$select_species) > 0)
+
     top_sharks %>%
-      filter(Common_Name %in% input$select_species) %>%
-      mutate(
-        Retrieval_Begin_Date_Time_NUM = as.numeric(Retrieval_Begin_Date_Time)
+      filter(
+        Common_Name %in% input$select_species
+        ) %>%
+      group_by(Unique_Retrieval) %>%
+      summarise(
+        Retrieval_Begin_Date_Time = first(Retrieval_Begin_Date_Time),
+        Retrieval_End_Date_Time = first(Retrieval_End_Date_Time),
+        Retrieval_Begin_Date_Time_NUM = as.numeric(Retrieval_Begin_Date_Time),
+        Soak_Time = first(Soak_Time),
+        Number_Caught = n(),
+        CPUE = (1000 * Number_Caught) / (750 * mean(Soak_Time)),
+        .groups = "drop"
       )
   })
   
 # Fit the GAM model
   gam_model <- reactive({
     req(gam_data())
-    mgcv::gam(Species_CPU_Hook_Hours_BLL1000 ~ s(Retrieval_Begin_Date_Time_NUM, bs = "cs", k=5), data = gam_data())
+    mgcv::gam(CPUE ~ s(Retrieval_Begin_Date_Time_NUM, bs = "cs", k=5), data = gam_data())
   })
   
 # Predict fitted values
@@ -257,23 +206,17 @@ thematic_shiny()
 # Make a Plotly GAM visualization
   output$cpueplot <- renderPlotly({
     
-    # if (length(input$select_species) < 1) {
-    #   
-    #   show_alert("Please ensure at least one species is selected.", type="error", showCloseButton=TRUE)
-    #   
-    # } else {
-    
     req(gam_data(), gam_pred())
     
     plot_ly() %>%
       add_markers(
         data = gam_data(),
         x = ~Retrieval_Begin_Date_Time,
-        y = ~Species_CPU_Hook_Hours_BLL1000,
+        y = ~CPUE,
         marker = list(color = "#00aae7", opacity = 0.5),
         name = "Observation",
         text = ~paste(
-          "<b>CPUE:</b>", Species_CPU_Hook_Hours_BLL1000,
+          "<b>CPUE:</b>", round(CPUE, 1),
           "<br><b>Haul Date:</b>", paste0(format(Retrieval_Begin_Date_Time, format="%b %d, %Y"))),
         hoverinfo = "text", showlegend = TRUE
       ) %>%
@@ -295,11 +238,15 @@ thematic_shiny()
         legend = list(orientation = "h"),
         paper_bgcolor = "rgba(0,0,0,0)",  
         plot_bgcolor = "rgba(0,0,0,0)"
+      ) %>%
+      config(
+        displaylogo = FALSE,
+        modeBarButtonsToRemove = c('toImage', 'lasso2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'select2d')
       )
     #}
   }) %>% bindCache(input$select_species)
   
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #   
+  # ---------------------------- TEXT ------------------------------------------  
   
 # print total observations for filtered data in ui
   output$text_obs <- renderText({
@@ -310,21 +257,11 @@ thematic_shiny()
   output$gam_text <- renderText({
     if (length(input$select_species) > 0) {
       req(input$select_species)
-      paste(paste(input$select_species, collapse = "; "), "Catch per Haul (All Sizes)")
+      paste(paste(input$select_species, collapse = "; "), "Catch per 1000 Hook Hours (All Sizes)")
     } else {
-      paste("Shark Catch per Haul (All Sizes)")
+      paste("Shark Catch per 1000 Hook Hours (All Sizes)")
     }
   })
-  
-  # output$coa_text <- renderText({
-  #   req(input$select_species)
-  #   paste(paste(input$select_species, collapse = "; "), "Condition on Arrival")
-  # })
-  # 
-  # output$fate_text <- renderText({
-  #   req(input$select_species)
-  #   paste(paste(input$select_species, collapse = "; "), "Fate")
-  # })
   
 } #end server
 
