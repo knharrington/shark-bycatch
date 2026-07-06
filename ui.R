@@ -8,9 +8,7 @@ theme <- bs_theme(
   bg = "#f4f4f4",
   fg = "#000000",
   primary = "#0054a6",
-  secondary = "#00aae7"#,
-  #base_font = font_google("Roboto Condensed"),
-  #heading_font = font_google("Roboto Condensed")
+  secondary = "#00aae7"
 )
 
 cards <- list(
@@ -39,27 +37,6 @@ cards <- list(
       plotlyOutput("cpueplot")
     )
   )#, # 4 gam graph card
-  # card(
-  #   full_screen = TRUE,
-  #   card_header("All Shark Species Caught"),
-  #   card_body(
-  #     withSpinner(DT::dataTableOutput("topspeciestable"), type = 4, color = "#00aae7")
-  #   )
-  # ), # 5 all species table
-  # card(
-  #   full_screen = TRUE,
-  #   card_header(textOutput("coa_text")),
-  #   card_body(
-  #     withSpinner(tableOutput("coatable"), type = 4, color = "#00aae7")
-  #   )
-  # ), # 6 coa table
-  # card(
-  #   full_screen = TRUE,
-  #   card_header(textOutput("fate_text")),
-  #   card_body(
-  #     withSpinner(tableOutput("fatetable"), type = 4, color = "#00aae7")
-  #   )
-  # ) # 7 fate table
 )
 
 tagList(
@@ -92,14 +69,6 @@ page_sidebar(
              theme = theme,                
              sidebar = sidebar(width=400,
                                helpText("Use the following selections to update the data displayed on the map and in the CPUE plot."),
-                               # pickerInput("select_species", label="Select Species (top 15 available)", choices = sort(unique(top_sharks$Common_Name)), 
-                               #             selected = "Sandbar Shark",
-                               #             #selectize = TRUE, 
-                               #             multiple=TRUE,
-                               #             options = pickerOptions(container = "body", liveSearch = TRUE, actionsBox = TRUE,
-                               #                                     style = "btn-outline-primary",
-                               #                                     selectedTextFormat = "count > 2", countSelectedText = "{0} species selected"), 
-                               #             width = "100%"),
                                selectInput("select_species", label="Select Species (top 15 available)", choices = sort(unique(top_sharks$Common_Name)), 
                                            selected = "Sandbar Shark", multiple = TRUE),
                                checkboxGroupInput("size", "Shark Length Estimate", 
@@ -116,16 +85,9 @@ page_sidebar(
                                                                      HTML("<b>Summer</b> (Jul, Aug, Sep)"), 
                                                                      HTML("<b>Fall</b> (Oct, Nov, Dec)")), 
                                                   selected = list("Winter","Spring", "Summer", "Fall"),
-                                                  choiceValues = list("Winter","Spring", "Summer", "Fall")),
-                               actionButton("update", "Update Map", icon=icon("refresh"), class="btn btn-primary", style = "color: white;")#,
-                               # hr(),
-                               # actionLink("open_about", " About the Data", icon = icon("info-circle")),
-                               # tags$a(
-                               #   icon("github"), " GitHub",
-                               #   href = "https://github.com/knharrington/shark-bycatch",
-                               #   target = "_blank",
-                               #   style = "display:block; margin-top:5px;"
-                               # )
+                                                  choiceValues = list("Winter","Spring", "Summer", "Fall"))#,
+                               #actionButton("update", "Update Map", icon=icon("refresh"), class="btn btn-primary", style = "color: white;")#,
+
              ), # end sidebar
              
              # Row 1: Value box + 2 small cards
@@ -144,14 +106,7 @@ page_sidebar(
              layout_columns(col_widths = c(8, 4), 
                                 cards[[1]],  
                                 cards[[4]]   
-             )#,
-             
-             # # Row 3: Tables - 3 equal cards
-             # layout_columns(col_widths = c(4, 4, 4), 
-             #                    cards[[5]],  
-             #                    cards[[6]],  
-             #                    cards[[7]]   
-             # )
+             )
              
 ) # sidebar page
 )
